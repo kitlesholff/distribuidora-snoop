@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="description" content="Bebidas geladas com entrega rápida em Alvarães." />
+    <title>Distribuidora Snoop | Alvarães</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260904-16" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="Distribuidora Snoop">
+        <span class="brand-logo-shell"><img class="brand-logo" src="assets/logo-snoop-header.png" alt="" /></span>
+        <span><strong>SNOOP</strong><small>Distribuidora</small></span>
+      </a>
+      <button class="cart-button" id="openCart" type="button" aria-label="Abrir carrinho">
+        <span aria-hidden="true">🛒</span>
+        <span>Carrinho</span>
+        <b id="cartCount">0</b>
+      </button>
+    </header>
+
+    <main id="inicio">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Entrega em Alvarães</span>
+          <h1>Bebida gelada,<br /><em>sem demora.</em></h1>
+          <p>Escolha seus produtos, monte o pedido e envie tudo pelo WhatsApp.</p>
+          <a class="primary-link" href="#produtos">Ver produtos <span>↓</span></a>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-carousel" id="heroCarousel" role="region" aria-roledescription="carrossel" aria-label="Bebidas em destaque" tabindex="0">
+            <div class="hero-carousel-track">
+              <article class="hero-slide" aria-hidden="false">
+                <img src="assets/carousel/01-schin.jpg" alt="Cerveja Schin gelada" fetchpriority="high" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/02-heineken.jpg" alt="Cerveja Heineken gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/03-baden-baden-ipa.jpg" alt="Cerveja Baden Baden IPA gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/04-devassa-puro-malte.jpg" alt="Cerveja Devassa Puro Malte gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/05-dewars-12.jpg" alt="Whisky Dewar's 12 anos" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/06-coca-cola.jpg" alt="Coca-Cola gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/07-brahma-duplo-malte.jpg" alt="Cerveja Brahma Duplo Malte gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/08-antarctica-original.jpg" alt="Cerveja Antarctica Original gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/09-corona-extra.jpg" alt="Cerveja Corona Extra gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/10-budweiser.jpg" alt="Cerveja Budweiser gelada" loading="lazy" />
+              </article>
+              <article class="hero-slide" aria-hidden="true">
+                <img src="assets/carousel/11-agua-mineral.jpg" alt="Galões de água mineral Puríssima e Aguacrim" loading="lazy" />
+              </article>
+            </div>
+            <button class="hero-carousel-control previous" type="button" data-carousel-prev aria-label="Mostrar bebida anterior">‹</button>
+            <button class="hero-carousel-control next" type="button" data-carousel-next aria-label="Mostrar próxima bebida">›</button>
+            <div class="hero-carousel-dots" aria-label="Escolher bebida"></div>
+            <div class="hero-carousel-progress" aria-hidden="true"><span></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="benefits" aria-label="Diferenciais">
+        <div class="benefit-item">
+          <span class="benefit-icon fast" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.2 2 4.5 13h6l-1 9L19.5 10h-6.1l-.2-8Z" /></svg></span>
+          <p><strong>Pedido rápido</strong><small>Direto no WhatsApp</small></p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon cold" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20M4.2 6.5l15.6 11M4.2 17.5l15.6-11M8.5 4.5 12 7l3.5-2.5M8.5 19.5 12 17l3.5 2.5M3.5 10 7 12l-3.5 2M20.5 10 17 12l3.5 2" /></svg></span>
+          <p><strong>Sempre gelado</strong><small>Pronto para o consumo</small></p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon safe" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.6 7 10 4.2-1.4 7-5.4 7-10V6l-7-3Z" /><path d="m8.8 12 2.1 2.1 4.5-5" /></svg></span>
+          <p><strong>Compra conferida</strong><small>Total registrado</small></p>
+        </div>
+      </section>
+
+      <section class="catalog" id="produtos">
+        <div class="section-heading">
+          <div><span class="eyebrow">Nosso catálogo</span><h2>Escolha o que vai hoje</h2></div>
+          <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar produto" /></label>
+        </div>
+        <div class="categories" id="categories" aria-label="Categorias"></div>
+        <div class="product-grid" id="productGrid"></div>
+        <div class="empty-state" id="emptyState" hidden>Nenhum produto encontrado.</div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="brand footer-brand"><span class="brand-mark">S</span><span><strong>SNOOP</strong><small>Distribuidora</small></span></div>
+      <p>Atendimento e entrega em Alvarães — AM</p>
+      <small>Venda proibida para menores de 18 anos. Beba com moderação.</small>
+    </footer>
+
+    <div class="overlay" id="overlay" hidden></div>
+    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" aria-labelledby="cartTitle">
+      <div class="drawer-head"><div><span class="eyebrow">Seu pedido</span><h2 id="cartTitle">Carrinho</h2></div><button id="closeCart" class="icon-button" type="button" aria-label="Fechar">×</button></div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-empty" id="cartEmpty"><span>🧊</span><h3>Seu carrinho está vazio</h3><p>Adicione alguns produtos para continuar.</p></div>
+      <form class="checkout" id="checkoutForm">
+        <label>Seu nome<input name="customerName" required maxlength="80" placeholder="Como podemos te chamar?" /></label>
+        <label>Entrega ou retirada<select name="deliveryType"><option value="Entrega">Entrega</option><option value="Retirada">Retirada</option></select></label>
+        <label id="addressField">Endereço de entrega<input name="address" maxlength="180" placeholder="Rua, número e bairro" /></label>
+        <label>Forma de pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão na entrega</option></select></label>
+        <label>Observação<textarea name="notes" maxlength="250" placeholder="Troco, ponto de referência..."></textarea></label>
+        <div class="total-row"><span>Total dos produtos</span><strong id="cartTotal">R$ 0,00</strong></div>
+        <small class="delivery-note">A taxa de entrega, se houver, será confirmada no atendimento.</small>
+        <button class="whatsapp-button" type="submit"><span>WhatsApp</span><strong>Enviar pedido</strong></button>
+      </form>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/hero-carousel.js?v=1"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

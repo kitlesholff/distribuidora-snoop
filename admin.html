@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Painel | Distribuidora Snoop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260904-13" />
+    <link rel="stylesheet" href="css/cash-closing.css?v=1" />
+  </head>
+  <body class="admin-body">
+    <section class="admin-login" id="adminLogin" hidden>
+      <div class="login-card">
+        <div class="brand"><span class="brand-mark">S</span><span><strong>SNOOP</strong><small>Painel administrativo</small></span></div>
+        <h1>Acesso restrito</h1>
+        <p id="loginHint">Entre para gerenciar produtos e conferir pedidos.</p>
+        <form id="loginForm">
+          <label id="emailLabel">E-mail<input type="email" name="email" autocomplete="username" placeholder="admin@empresa.com" /></label>
+          <label>Senha ou PIN<input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" /></label>
+          <button class="primary-button" type="submit">Entrar no painel</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="admin-shell" id="adminShell" hidden>
+      <aside class="admin-sidebar">
+        <div class="brand"><span class="brand-mark">S</span><span><strong>SNOOP</strong><small>Administração</small></span></div>
+        <nav>
+          <button class="nav-item active" data-view="orders">Pedidos <b id="pendingBadge">0</b></button>
+          <button class="nav-item" data-view="confirmed">Confirmados <b class="confirmed-count" id="confirmedBadge">0</b></button>
+          <button class="nav-item" data-view="cancelled">Cancelados <b class="cancelled-count" id="cancelledBadge">0</b></button>
+          <button class="nav-item" data-view="products">Produtos</button>
+          <button class="nav-item" data-view="dashboard">Painel</button>
+          <button class="nav-item" data-view="expenses">Saída</button>
+          <button class="nav-item" data-view="cashClosing">Fechamento de caixa</button>
+          <button class="nav-item" data-view="control">Controle geral</button>
+        </nav>
+        <div class="mode-indicator"><span></span><div><strong id="modeTitle">Modo local</strong><small id="modeText">Dados deste navegador</small></div></div>
+        <button class="logout-button" id="logoutButton">Sair</button>
+      </aside>
+
+      <main class="admin-main">
+        <header class="admin-header"><div><span class="eyebrow">Distribuidora Snoop</span><h1 id="viewTitle">Pedidos</h1></div><button class="mobile-menu" id="mobileMenu">Menu</button></header>
+
+        <section class="admin-view" id="ordersView">
+          <div class="stats"><article><span>Aguardando</span><strong id="statPending">0</strong></article><article><span>Confirmados</span><strong id="statConfirmed">0</strong></article><article><span>Total registrado</span><strong id="statRevenue">R$ 0,00</strong></article><article class="pending-value"><span>Valor pendente</span><strong id="statPendingValue">R$ 0,00</strong></article></div>
+          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos recentes</h2><p>Compare o código e o total com a mensagem recebida no WhatsApp.</p></div><div class="panel-heading-actions"><span class="auto-refresh-status"><i></i><span id="lastRefresh">Atualização automática ativa</span></span><button class="primary-button compact" id="addManualOrder">+ Pedido presencial</button><button class="refresh-button" id="refreshOrders"><span class="refresh-icon">↻</span><span>Atualizar agora</span></button></div></div><div class="orders-list" id="ordersList"></div></div>
+        </section>
+
+        <section class="admin-view" id="productsView" hidden>
+          <div class="panel-card"><div class="panel-heading products-heading"><div><h2>Produtos</h2><p>Filtre o catálogo, gerencie categorias e controle o estoque.</p></div><div class="product-toolbar"><label>Categoria<select id="productCategoryFilter"><option value="all">Todas as categorias</option></select></label><button class="secondary-button compact" id="manageCategories">Categorias</button><button class="primary-button compact" id="addProduct">+ Novo produto</button></div></div><div class="admin-products" id="adminProducts"></div></div>
+        </section>
+        <section class="admin-view" id="confirmedView" hidden>
+          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos confirmados</h2><p>Consulte os pedidos concluídos e altere o status quando necessário.</p></div></div><div class="orders-list" id="confirmedOrdersList"></div></div>
+        </section>
+
+        <section class="admin-view" id="cancelledView" hidden>
+          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos cancelados</h2><p>Consulte os pedidos cancelados e restaure o status quando necessário.</p></div></div><div class="orders-list" id="cancelledOrdersList"></div></div>
+        </section>
+        <section class="admin-view dashboard-view" id="dashboardView" hidden>
+          <div class="dashboard-toolbar">
+            <div class="dashboard-intro"><span class="eyebrow">Central de inteligência</span><h2>Visão geral do negócio</h2><p>Acompanhe o desempenho financeiro e os pedidos em tempo real.</p></div>
+            <div class="dashboard-controls"><span class="dashboard-live"><i></i>Dados sincronizados</span><label>Período<select id="dashboardPeriod"><option value="today">Hoje</option><option value="7" selected>Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="all">Todo o período</option></select></label></div>
+          </div>
+          <div class="dashboard-stats">
+            <article class="metric-card income" data-icon="↗"><span>Entradas confirmadas</span><strong id="dashIncome">R$ 0,00</strong><small id="dashIncomeCount">0 pedidos</small></article>
+            <article class="metric-card outcome" data-icon="↘"><span>Saídas registradas</span><strong id="dashOutcome">R$ 0,00</strong><small id="dashOutcomeCount">0 lançamentos</small></article>
+            <article class="metric-card balance" data-icon="◆"><span>Saldo do período</span><strong id="dashBalance">R$ 0,00</strong><small>Entradas menos saídas</small></article>
+            <article class="metric-card pending" data-icon="◷"><span>Receita pendente</span><strong id="dashPending">R$ 0,00</strong><small id="dashPendingCount">0 aguardando</small></article>
+            <article class="metric-card average" data-icon="◎"><span>Ticket médio</span><strong id="dashAverage">R$ 0,00</strong><small>Pedidos confirmados</small></article>
+            <article class="metric-card conversion" data-icon="%"><span>Taxa de confirmação</span><strong id="dashConversion">0%</strong><small>Sobre pedidos decididos</small></article>
+            <article class="metric-card in-person" data-icon="⌂"><span>Receita presencial</span><strong id="dashInPersonRevenue">R$ 0,00</strong><small id="dashInPersonRevenueCount">0 confirmados</small></article>
+            <article class="metric-card in-person-orders" data-icon="▣"><span>Pedidos presenciais</span><strong id="dashInPersonOrders">0</strong><small id="dashInPersonStatus">0 pendentes · 0 cancelados</small></article>
+          </div>
+          <div class="dashboard-grid">
+            <article class="dashboard-card cashflow-card"><div class="dashboard-card-head"><div><span class="card-kicker">Desempenho</span><h3>Fluxo de receita</h3><p>Compare entradas confirmadas e saídas registradas por dia</p></div><div class="chart-head-actions"><div class="chart-mode" role="group" aria-label="Tipo do gráfico"><button class="active" data-chart-mode="value">Valores</button><button data-chart-mode="count">Registros</button></div><div class="chart-legend"><span class="income-dot">Entradas</span><span class="outcome-dot">Saídas</span></div></div></div><div class="cashflow-chart" id="cashflowChart"></div></article>
+            <article class="dashboard-card"><div class="dashboard-card-head"><div><h3>Formas de pagamento</h3><p>Participação na receita confirmada</p></div></div><div class="dashboard-ranking" id="paymentBreakdown"></div></article>
+            <article class="dashboard-card"><div class="dashboard-card-head"><div><h3>Produtos mais vendidos</h3><p>Quantidade em pedidos confirmados</p></div></div><div class="dashboard-ranking" id="topProducts"></div></article>
+            <article class="dashboard-card"><div class="dashboard-card-head"><div><h3>Movimentações recentes</h3><p>Últimas mudanças financeiras do período</p></div></div><div class="movement-list" id="recentMovements"></div></article>
+            <article class="dashboard-card channel-card"><div class="dashboard-card-head"><div><span class="card-kicker">Origem das vendas</span><h3>Pedidos por canal</h3><p>Compare as vendas presenciais com os pedidos recebidos online</p></div></div><div class="sales-channels" id="salesChannels"></div></article>
+          </div>
+        </section>
+
+        <section class="admin-view expenses-view" id="expensesView" hidden>
+          <div class="expenses-summary">
+            <article><span>Total de saídas</span><strong id="expenseTotal">R$ 0,00</strong></article>
+            <article><span>Lançamentos</span><strong id="expenseCount">0</strong></article>
+            <article><span>Maior saída</span><strong id="expenseLargest">R$ 0,00</strong></article>
+            <article><span>Responsáveis</span><strong id="expensePeople">0</strong></article>
+          </div>
+          <div class="expenses-layout">
+            <article class="panel-card expense-form-card">
+              <div class="panel-heading"><div><span class="card-kicker">Controle financeiro</span><h2>Registrar saída</h2><p>Informe os dados de cada valor retirado do caixa.</p></div></div>
+              <form id="expenseForm">
+                <label>Observação<textarea name="description" required minlength="2" maxlength="300" placeholder="Ex.: Compra de embalagens"></textarea></label>
+                <div class="form-row"><label>Quanto foi gasto<input name="amount" required type="number" min="0.01" step="0.01" placeholder="0,00" /></label><label>Quem gastou<input name="spentBy" required minlength="2" maxlength="100" placeholder="Nome da pessoa" /></label></div>
+                <label>Data da saída<input name="spentAt" required type="date" /></label>
+                <button class="expense-submit" type="submit"><span>−</span> Registrar saída</button>
+              </form>
+            </article>
+            <article class="panel-card expense-list-card">
+              <div class="panel-heading"><div><span class="card-kicker">Histórico</span><h2>Saídas registradas</h2><p>Valores ordenados do lançamento mais recente para o mais antigo.</p></div></div>
+              <div class="expenses-list" id="expensesList"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view cash-closing-view" id="cashClosingView" hidden>
+          <div class="closing-toolbar">
+            <div><span class="eyebrow">Conferência diária</span><h2>Feche o dia com tudo conferido</h2><p>Vendas, saídas e dinheiro em caixa, em um só lugar.</p></div>
+            <span class="closing-timezone">Alvarães · horário do Amazonas</span>
+          </div>
+          <div class="closing-datebar">
+            <label>Dia do caixa<input type="date" id="cashClosingDate" required /></label>
+            <button class="refresh-button" id="refreshCashClosing" type="button"><span class="refresh-icon" aria-hidden="true">↻</span> Atualizar conferência</button>
+            <span id="cashClosingStatus" class="closing-status">Selecione o dia</span>
+          </div>
+          <p class="closing-message" id="cashClosingMessage" role="status" hidden></p>
+          <div id="cashClosingContent" hidden>
+            <div class="closing-metrics">
+              <article class="income"><span>Vendas confirmadas</span><strong id="closingIncome">R$ 0,00</strong><small id="closingOrderCount">0 pedidos</small></article>
+              <article class="expense"><span>Saídas do dia</span><strong id="closingExpenses">R$ 0,00</strong><small>Todos os pagamentos</small></article>
+              <article class="net"><span>Saldo das movimentações</span><strong id="closingNet">R$ 0,00</strong><small>Vendas menos saídas</small></article>
+              <article class="pending"><span>Aguardando confirmação</span><strong id="closingPending">R$ 0,00</strong><small id="closingPendingCount">0 pedidos pendentes</small></article>
+            </div>
+            <div class="closing-saved" id="closingSaved" hidden><div><strong id="closingSavedTitle"></strong><p id="closingSavedText"></p></div><div class="closing-buttons"><button type="button" class="secondary-button compact" id="viewLatestClosing">Ver comprovante</button><button type="button" class="secondary-button compact" id="reviseClosing">Registrar correção</button></div></div>
+            <div class="closing-layout">
+              <article class="closing-card">
+                <span class="card-kicker">01 · Resumo do movimento</span><h3>Como o dia foi recebido</h3>
+                <div id="closingPayments" class="closing-payments"></div>
+                <div class="closing-channels"><div><span>Vendas presenciais</span><strong id="closingInPerson"></strong></div><div><span>Vendas online</span><strong id="closingOnline"></strong></div></div>
+                <p class="closing-help">Entram as vendas confirmadas de pedidos criados entre 00h e 23h59 deste dia, no horário de Alvarães. Cancelados não somam receita. As saídas seguem a data informada no lançamento.</p>
+                <details class="closing-details"><summary>Conferir pedidos e saídas do dia</summary><div id="closingMovementDetails"></div></details>
+              </article>
+              <article class="closing-card closing-count-card" id="closingFormCard">
+                <span class="card-kicker">02 · Conferência do dinheiro</span><h3>Quanto tem na gaveta?</h3>
+                <form id="cashClosingForm">
+                  <fieldset id="closingFields">
+                    <div class="form-row"><label>Dinheiro inicial (R$)<input name="opening_cash" type="number" min="0" max="9999999999.99" step="0.01" value="0" required /><small>Troco disponível antes das vendas.</small></label><label>Saídas em dinheiro (R$)<input name="cash_expenses" type="number" min="0" step="0.01" placeholder="0,00" required /><small id="closingCashExpenseHint">Parte das saídas do dia paga em dinheiro.</small></label></div>
+                    <div class="closing-equation"><span>Inicial + vendas em dinheiro − saídas em dinheiro</span><div><span>Dinheiro esperado</span><strong id="closingExpected">—</strong></div></div>
+                    <label>Dinheiro contado no fechamento (R$)<input name="counted_cash" type="number" min="0" max="9999999999.99" step="0.01" placeholder="Conte as notas e moedas" required /><small>Somente notas e moedas. Pix e cartão ficam fora desta contagem.</small></label>
+                    <div id="closingDifference" class="closing-difference" aria-live="polite"><span>Informe a contagem para conferir.</span></div>
+                    <label>Responsável pelo fechamento<input name="responsible" minlength="2" maxlength="100" placeholder="Nome de quem conferiu o caixa" required autocomplete="name" /></label>
+                    <label>Observações<textarea name="notes" maxlength="1000" rows="3" placeholder="Explique diferenças ou o motivo de uma correção."></textarea><small id="closingNotesHint">Obrigatório se houver sobra, falta ou uma correção.</small></label>
+                    <button type="submit" class="primary-button" id="prepareCashClosing">Conferir e fechar caixa</button>
+                    <p class="closing-help" id="closingPendingHelp">Conclua os pedidos pendentes do dia antes de fechar.</p>
+                  </fieldset>
+                </form>
+              </article>
+            </div>
+          </div>
+          <article class="closing-card closing-history">
+            <div class="closing-history-head"><div><span class="card-kicker">Arquivo de conferências</span><h3>Histórico de fechamentos</h3><p>Cada correção guarda uma nova versão do dia.</p></div><label>Mês<input type="month" id="cashClosingMonth" /></label></div>
+            <div id="cashClosingHistory" aria-live="polite"></div>
+          </article>
+        </section>
+
+        <section class="admin-view general-control-view" id="controlView" hidden>
+          <div class="control-toolbar">
+            <div class="control-intro"><span class="eyebrow">Administração e segurança</span><h2>Central de controle</h2><p>Faça cópias dos registros e gerencie um novo início sem alterar o catálogo.</p></div>
+            <span class="control-secure-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.6 7 10 4.2-1.4 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></svg> Área protegida</span>
+          </div>
+
+          <div class="control-stats">
+            <article><span>Pedidos registrados</span><strong id="controlOrders">0</strong></article>
+            <article class="positive"><span>Entradas confirmadas</span><strong id="controlIncome">R$ 0,00</strong></article>
+            <article class="negative"><span>Saídas registradas</span><strong id="controlExpenses">R$ 0,00</strong></article>
+            <article class="balance"><span>Saldo atual</span><strong id="controlBalance">R$ 0,00</strong></article>
+            <article><span>Produtos preservados</span><strong id="controlProducts">0</strong></article>
+          </div>
+
+          <div class="control-grid">
+            <article class="control-card export-control-card">
+              <div class="control-card-head">
+                <span class="control-card-icon export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v2h14v-2"/></svg></span>
+                <div><span class="card-kicker">Cópia dos dados</span><h3>Exportar registros</h3><p>Gere um relatório completo antes de limpar ou arquivar o histórico.</p></div>
+              </div>
+              <div class="export-content-list"><span>Pedidos e itens</span><span>Entradas e saídas</span><span>Produtos cadastrados</span></div>
+              <div class="control-actions">
+                <button class="control-button pdf" id="exportControlPdf" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M9.5 16h5M9.5 12h5"/></svg><span><strong>Exportar PDF</strong><small>Relatório para impressão</small></span></button>
+                <button class="control-button sheet" id="exportControlSheet" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5zM5 9h14M10 9v12M10 13h9M10 17h9"/></svg><span><strong>Exportar planilha</strong><small>Arquivo compatível com Excel</small></span></button>
+              </div>
+              <small class="control-backup-status" id="controlBackupStatus">Nenhuma exportação realizada nesta sessão.</small>
+            </article>
+
+            <article class="control-card reset-control-card">
+              <div class="control-card-head">
+                <span class="control-card-icon danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3v.1"/></svg></span>
+                <div><span class="card-kicker">Zona de risco</span><h3>Começar do zero</h3><p>Remove definitivamente o histórico operacional salvo no sistema.</p></div>
+              </div>
+              <div class="reset-scope">
+                <div><span>Pedidos</span><strong id="resetScopeOrders">0 registros</strong></div>
+                <div><span>Saídas financeiras</span><strong id="resetScopeExpenses">0 registros</strong></div>
+              </div>
+              <div class="preserved-data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg><span><strong>Catálogo e fechamentos serão preservados</strong><small>Produtos, categorias, estoque, imagens e comprovantes de caixa não serão apagados.</small></span></div>
+              <button class="danger-reset-button" id="openResetData" type="button"><span>⟲</span> Iniciar reset protegido</button>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="productDialog" class="product-dialog">
+      <form method="dialog" id="productForm">
+        <div class="drawer-head"><div><span class="eyebrow">Catálogo</span><h2 id="dialogTitle">Editar produto</h2></div><button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Fechar">×</button></div>
+        <input type="hidden" name="id" />
+        <label>Nome<input name="name" required maxlength="80" /></label>
+        <label>Descrição<textarea name="description" maxlength="180"></textarea></label>
+        <div class="form-row"><label>Preço<input name="price" required type="number" min="0" step="0.01" /></label><label>Categoria<select name="category" id="productCategorySelect" required></select></label></div>
+        <div class="product-image-upload">
+          <div class="product-image-preview" id="productImagePreview"><span id="productImageEmpty">Imagem</span><img id="productImagePreviewImg" alt="Pré-visualização do produto" hidden /></div>
+          <div class="product-upload-content"><strong>Imagem do produto</strong><p>Envie uma imagem JPG, PNG, WEBP ou AVIF de até 5 MB.</p><input id="productImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden /><label class="upload-image-button" for="productImageFile"><span>↑</span> Selecionar imagem</label><small id="productImageStatus">Nenhum arquivo selecionado</small></div>
+        </div>
+        <label class="image-path-field">Ou informe uma URL/caminho<input name="image" placeholder="assets/produtos/imagem.webp" /></label>
+        <label class="switch-label stock-switch"><input name="available" type="checkbox" /> Produto em estoque <small>Desmarque para ocultar do catálogo público.</small></label>
+        <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit" formnovalidate>Cancelar</button><button class="primary-button" value="default" type="button" id="saveProduct">Salvar</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="categoryDialog" class="product-dialog category-dialog">
+      <form method="dialog" id="categoryForm">
+        <div class="drawer-head"><div><span class="eyebrow">Organização</span><h2>Categorias</h2></div><button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Fechar">×</button></div>
+        <div class="category-create"><label>Nova categoria<input id="newCategoryName" maxlength="50" placeholder="Ex.: Destilados" /></label><button class="primary-button" type="button" id="saveCategory">Adicionar</button></div>
+        <div class="category-list" id="categoryList"></div>
+        <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit" formnovalidate>Fechar</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="manualOrderDialog" class="product-dialog manual-order-dialog">
+      <form method="dialog" id="manualOrderForm">
+        <div class="drawer-head"><div><span class="eyebrow">Venda no balcão</span><h2>Novo pedido presencial</h2></div><button class="icon-button" value="cancel" type="submit" aria-label="Fechar">×</button></div>
+        <div class="form-row"><label>Cliente<input name="customerName" required maxlength="80" value="Cliente balcão" /></label><label>Pagamento<select name="payment" required><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão de débito">Cartão de débito</option><option value="Cartão de crédito">Cartão de crédito</option></select></label></div>
+        <div class="manual-items-head"><div><strong>Produtos</strong><small>Adicione os itens comprados presencialmente.</small></div><button class="secondary-button compact" type="button" id="addManualItem">+ Produto</button></div>
+        <div class="manual-order-items" id="manualOrderItems"></div>
+        <div class="form-row"><label>Status inicial<select name="status"><option value="confirmed" selected>Confirmado</option><option value="pending">Pendente</option></select></label><label>Observações<input name="notes" maxlength="180" placeholder="Opcional" /></label></div>
+        <div class="manual-total"><span>Total do pedido</span><strong id="manualOrderTotal">R$ 0,00</strong></div>
+        <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit">Cancelar</button><button class="primary-button" value="default" type="button" id="saveManualOrder">Salvar pedido</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="resetDataDialog" class="product-dialog reset-data-dialog">
+      <form method="dialog" id="resetDataForm">
+        <div class="drawer-head"><div><span class="eyebrow">Confirmação obrigatória</span><h2>Resetar histórico</h2></div><button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Fechar">×</button></div>
+        <div class="reset-dialog-warning"><span>!</span><div><strong>Esta ação não poderá ser desfeita</strong><p>Todos os pedidos e todas as saídas financeiras serão apagados. Exporte uma cópia antes de continuar. O histórico de fechamentos de caixa será preservado, incluindo as cópias dos movimentos conferidos.</p></div></div>
+        <label>Senha atual<input name="password" type="password" required autocomplete="current-password" placeholder="Digite sua senha" /></label>
+        <label>Confirmação<input name="confirmation" required autocomplete="off" placeholder="Digite ZERAR" /><small>Digite <strong>ZERAR</strong> exatamente como mostrado.</small></label>
+        <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit" formnovalidate>Cancelar</button><button class="confirm-reset-button" id="confirmResetData" type="button" disabled>Apagar histórico</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="cashClosingConfirm" class="product-dialog closing-confirm-dialog" aria-labelledby="closingConfirmTitle">
+      <div class="drawer-head"><div><span class="eyebrow">Conferência final</span><h2 id="closingConfirmTitle">Fechar caixa</h2></div><button type="button" class="icon-button" data-close-closing aria-label="Fechar">×</button></div>
+      <div id="closingConfirmSummary"></div>
+      <p id="closingConfirmError" class="closing-message error" role="alert" hidden></p>
+      <p class="closing-help">O fechamento registra uma cópia dos valores conferidos. Novas vendas e alterações posteriores precisam de uma nova versão.</p>
+      <div class="dialog-actions"><button type="button" class="secondary-button" data-close-closing>Voltar</button><button type="button" class="primary-button" id="saveCashClosing">Confirmar fechamento</button></div>
+    </dialog>
+    <dialog id="cashClosingReport" class="product-dialog closing-report-dialog" aria-labelledby="closingReportTitle">
+      <div class="drawer-head"><div><span class="eyebrow">Comprovante salvo</span><h2 id="closingReportTitle">Fechamento de caixa</h2></div><button type="button" class="icon-button" data-close-closing aria-label="Fechar">×</button></div>
+      <div id="closingReportBody"></div>
+      <div class="dialog-actions"><button type="button" class="secondary-button" data-close-closing>Fechar</button><button type="button" class="primary-button" id="printCashClosing">Imprimir / Salvar PDF</button></div>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/storage.js?v=20260904-12"></script>
+    <script src="js/admin-control.js?v=20260904-2"></script>
+    <script src="js/cash-closing-core.js?v=1"></script>
+    <script src="js/cash-closing-store.js?v=1"></script>
+    <script src="js/cash-closing.js?v=1"></script>
+    <script src="js/admin.js?v=20260904-13"></script>
+  </body>
+</html>
