@@ -50,3 +50,7 @@ Por ser um projeto estático, pode ser publicado no GitHub Pages, Vercel ou Netl
 ## Fechamento de caixa
 
 A aba **Fechamento de caixa**, abaixo de **Saída**, confere o dinheiro físico, resume pagamentos e salva comprovantes diários com histórico de correções e impressão em PDF. Para ativar no banco, execute `supabase/06-fechamento-caixa.sql` no SQL Editor. Veja o passo a passo em [FECHAMENTO-DE-CAIXA.md](FECHAMENTO-DE-CAIXA.md).
+
+## Instalação como aplicativo (PWA)
+
+O catálogo e o painel podem ser instalados pelo navegador como **Snoop** e **Snoop Admin**, respectivamente. Publique os arquivos atualizados na Vercel e siga [PWA-INSTALACAO.md](PWA-INSTALACAO.md). Esta adaptação mantém as funções e o layout atuais e não exige outro SQL. Operações comerciais continuam dependendo de conexão.
