@@ -6,9 +6,24 @@
   if(StoreAPI.mode==='local'){document.querySelector('#emailLabel').hidden=true;document.querySelector('#loginHint').textContent='Modo local de demonstração. Use o PIN definido em js/config.js.'}else{document.querySelector('#modeTitle').textContent='Banco conectado';document.querySelector('#modeText').textContent='Sincronização ativa'}
   document.querySelector('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);try{if(!await StoreAPI.login(f.get('email'),f.get('password')))throw new Error('PIN incorreto.');showAuthenticatedState(true);e.target.reset();await loadAll()}catch(err){toast(err.message||'Não foi possível entrar.')}});
   document.querySelector('#logoutButton').addEventListener('click',async()=>{await StoreAPI.logout();showAuthenticatedState(false)});
-  const viewTitles={orders:'Pedidos',products:'Produtos',confirmed:'Confirmados',cancelled:'Cancelados',dashboard:'Painel',expenses:'Saída',cashClosing:'Fechamento de caixa',control:'Controle geral'};
+  const viewTitles={orders:'Pedidos',products:'Produtos',dashboard:'Painel',expenses:'Saída',cashClosing:'Fechamento de caixa',control:'Controle geral'};
   document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b===btn));const view=btn.dataset.view;document.querySelectorAll('.admin-view').forEach(section=>section.hidden=section.id!==`${view}View`);document.querySelector('#viewTitle').textContent=viewTitles[view];if(view==='dashboard')renderDashboard();if(view==='control')window.AdminControl?.render({products,orders,expenses});if(view==='cashClosing')window.AdminCashClosing?.open();document.querySelector('.admin-sidebar').classList.remove('open')}));
   document.querySelector('#mobileMenu').addEventListener('click',()=>document.querySelector('.admin-sidebar').classList.toggle('open'));
+  const orderFilters={
+    pending:{list:'ordersList',title:'Pedidos aguardando confirmação',description:'Compare o código e o total com a mensagem recebida no WhatsApp.'},
+    confirmed:{list:'confirmedOrdersList',title:'Pedidos confirmados',description:'Consulte os pedidos concluídos e altere o status quando necessário.'},
+    cancelled:{list:'cancelledOrdersList',title:'Pedidos cancelados',description:'Consulte os pedidos cancelados e restaure o status quando necessário.'}
+  };
+  document.querySelectorAll('[data-order-filter]').forEach(button=>button.addEventListener('click',()=>{
+    const selected=orderFilters[button.dataset.orderFilter];
+    document.querySelectorAll('[data-order-filter]').forEach(item=>{
+      item.classList.toggle('active',item===button);
+      item.setAttribute('aria-pressed',String(item===button));
+    });
+    Object.values(orderFilters).forEach(filter=>document.getElementById(filter.list).hidden=filter!==selected);
+    document.querySelector('#ordersHeading').textContent=selected.title;
+    document.querySelector('#ordersDescription').textContent=selected.description;
+  }));
   async function loadAll(){[products,orders,expenses,categories]=await Promise.all([StoreAPI.getProducts(true),StoreAPI.getOrders(),StoreAPI.getExpenses(),StoreAPI.getCategories()]);categories=[...new Set([...categories,...products.map(product=>product.category).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'pt-BR'));renderCategories();renderProducts();renderOrders();renderExpenses();renderDashboard();window.AdminControl?.render({products,orders,expenses});markLastRefresh()}
   function orderButtons(status){
     if(status==='pending')return '<button class="mini-button confirm" data-status="confirmed">Confirmar</button><button class="mini-button cancel" data-status="cancelled">Cancelar</button>';
@@ -20,6 +35,7 @@
   function renderOrders(){
     const pending=orders.filter(o=>o.status==='pending'),confirmed=orders.filter(o=>o.status==='confirmed'),cancelled=orders.filter(o=>o.status==='cancelled');
     document.querySelector('#pendingBadge').textContent=pending.length;
+    document.querySelector('#pendingFilterBadge').textContent=pending.length;
     document.querySelector('#confirmedBadge').textContent=confirmed.length;
     document.querySelector('#cancelledBadge').textContent=cancelled.length;
     document.querySelector('#statPending').textContent=pending.length;

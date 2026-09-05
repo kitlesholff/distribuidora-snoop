@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260904-13" />
+    <link rel="stylesheet" href="styles.css?v=20260905-orders" />
     <link rel="stylesheet" href="css/cash-closing.css?v=1" />
   </head>
   <body class="admin-body">
@@ -37,8 +37,6 @@
         <div class="brand"><span class="brand-mark">S</span><span><strong>SNOOP</strong><small>Administração</small></span></div>
         <nav>
           <button class="nav-item active" data-view="orders">Pedidos <b id="pendingBadge">0</b></button>
-          <button class="nav-item" data-view="confirmed">Confirmados <b class="confirmed-count" id="confirmedBadge">0</b></button>
-          <button class="nav-item" data-view="cancelled">Cancelados <b class="cancelled-count" id="cancelledBadge">0</b></button>
           <button class="nav-item" data-view="products">Produtos</button>
           <button class="nav-item" data-view="dashboard">Painel</button>
           <button class="nav-item" data-view="expenses">Saída</button>
@@ -54,18 +52,15 @@
 
         <section class="admin-view" id="ordersView">
           <div class="stats"><article><span>Aguardando</span><strong id="statPending">0</strong></article><article><span>Confirmados</span><strong id="statConfirmed">0</strong></article><article><span>Total registrado</span><strong id="statRevenue">R$ 0,00</strong></article><article class="pending-value"><span>Valor pendente</span><strong id="statPendingValue">R$ 0,00</strong></article></div>
-          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos recentes</h2><p>Compare o código e o total com a mensagem recebida no WhatsApp.</p></div><div class="panel-heading-actions"><span class="auto-refresh-status"><i></i><span id="lastRefresh">Atualização automática ativa</span></span><button class="primary-button compact" id="addManualOrder">+ Pedido presencial</button><button class="refresh-button" id="refreshOrders"><span class="refresh-icon">↻</span><span>Atualizar agora</span></button></div></div><div class="orders-list" id="ordersList"></div></div>
+          <div class="panel-card"><div class="panel-heading"><div><h2 id="ordersHeading">Pedidos aguardando confirmação</h2><p id="ordersDescription">Compare o código e o total com a mensagem recebida no WhatsApp.</p></div><div class="panel-heading-actions"><span class="auto-refresh-status"><i></i><span id="lastRefresh">Atualização automática ativa</span></span><button class="primary-button compact" id="addManualOrder">+ Pedido presencial</button><button class="refresh-button" id="refreshOrders"><span class="refresh-icon">↻</span><span>Atualizar agora</span></button></div></div><div class="order-status-filters" role="group" aria-label="Status dos pedidos">
+            <button type="button" class="order-status-filter active" data-order-filter="pending" aria-pressed="true" aria-controls="ordersList">Aguardando <b id="pendingFilterBadge">0</b></button>
+            <button type="button" class="order-status-filter " data-order-filter="confirmed" aria-pressed="false" aria-controls="confirmedOrdersList">Confirmados <b id="confirmedBadge">0</b></button>
+            <button type="button" class="order-status-filter " data-order-filter="cancelled" aria-pressed="false" aria-controls="cancelledOrdersList">Cancelados <b id="cancelledBadge">0</b></button>
+          </div><div class="orders-list" id="ordersList"></div><div class="orders-list" id="confirmedOrdersList" hidden></div><div class="orders-list" id="cancelledOrdersList" hidden></div></div>
         </section>
 
         <section class="admin-view" id="productsView" hidden>
           <div class="panel-card"><div class="panel-heading products-heading"><div><h2>Produtos</h2><p>Filtre o catálogo, gerencie categorias e controle o estoque.</p></div><div class="product-toolbar"><label>Categoria<select id="productCategoryFilter"><option value="all">Todas as categorias</option></select></label><button class="secondary-button compact" id="manageCategories">Categorias</button><button class="primary-button compact" id="addProduct">+ Novo produto</button></div></div><div class="admin-products" id="adminProducts"></div></div>
-        </section>
-        <section class="admin-view" id="confirmedView" hidden>
-          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos confirmados</h2><p>Consulte os pedidos concluídos e altere o status quando necessário.</p></div></div><div class="orders-list" id="confirmedOrdersList"></div></div>
-        </section>
-
-        <section class="admin-view" id="cancelledView" hidden>
-          <div class="panel-card"><div class="panel-heading"><div><h2>Pedidos cancelados</h2><p>Consulte os pedidos cancelados e restaure o status quando necessário.</p></div></div><div class="orders-list" id="cancelledOrdersList"></div></div>
         </section>
         <section class="admin-view dashboard-view" id="dashboardView" hidden>
           <div class="dashboard-toolbar">
@@ -279,7 +274,7 @@
     <script src="js/cash-closing-core.js?v=1"></script>
     <script src="js/cash-closing-store.js?v=1"></script>
     <script src="js/cash-closing.js?v=1"></script>
-    <script src="js/admin.js?v=20260904-13"></script>
+    <script src="js/admin.js?v=20260905-orders"></script>
     <script src="js/pwa.js?v=1"></script>
   </body>
 </html>
