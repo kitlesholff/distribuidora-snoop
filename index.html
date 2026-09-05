@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css?v=20260904-16" />
+    <link rel="stylesheet" href="css/catalog-navigation.css?v=20260905-1" />
   </head>
   <body>
     <header class="topbar">
@@ -101,9 +102,23 @@
       <section class="catalog" id="produtos">
         <div class="section-heading">
           <div><span class="eyebrow">Nosso catálogo</span><h2>Escolha o que vai querer hoje</h2></div>
-          <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar produto" /></label>
+          <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg><input id="searchInput" type="search" placeholder="Buscar produto" aria-label="Buscar produto" /></label>
         </div>
-        <div class="categories" id="categories" aria-label="Categorias"></div>
+        <nav class="category-navigation" id="categoryNavigation" aria-label="Filtrar produtos por categoria">
+          <div class="category-navigation-heading">
+            <span>Categorias</span>
+            <button class="category-expand" id="expandCategories" type="button" aria-expanded="false" aria-controls="categories" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1" /><rect x="15" y="3" width="6" height="6" rx="1" /><rect x="3" y="15" width="6" height="6" rx="1" /><rect x="15" y="15" width="6" height="6" rx="1" /></svg>
+              <span>Ver todas</span>
+            </button>
+          </div>
+          <div class="category-rail">
+            <button class="category-scroll" id="previousCategories" type="button" aria-label="Ver categorias anteriores" aria-controls="categories" disabled hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg></button>
+            <div class="categories" id="categories" role="group" aria-label="Categorias"></div>
+            <button class="category-scroll" id="nextCategories" type="button" aria-label="Ver próximas categorias" aria-controls="categories" disabled hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg></button>
+          </div>
+        </nav>
+        <p class="catalog-results" id="catalogResults" role="status" aria-live="polite" aria-atomic="true"></p>
         <div class="product-grid" id="productGrid"></div>
         <div class="empty-state" id="emptyState" hidden>Nenhum produto encontrado.</div>
       </section>
@@ -138,7 +153,8 @@
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/hero-carousel.js?v=1"></script>
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=20260905-1"></script>
+    <script src="js/catalog-navigation.js?v=20260905-1"></script>
     <script src="js/pwa.js?v=1"></script>
   </body>
 </html>
