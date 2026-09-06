@@ -29,7 +29,7 @@
     return data.user.email || data.user.id;
   }
   function preview(db, id) {
-    const session = id ? db.sessions.find(s => s.id === id) : db.sessions.find(s => !s.closed_at) || db.sessions.find(s => s.business_date === window.CashClosingCore.dayKey()) || null;
+    const session = id ? db.sessions.find(s => s.id === id) : db.sessions.find(s => !s.closed_at) || null;
     const movements = db.movements.filter(m => m.session_id === session?.id);
     let pending = orders(db).filter(o => o.status === 'pending').map(o => {
       const paid = db.movements.filter(m => m.order_id === o.id && m.kind === 'receipt').reduce((n, m) => n + core.cents(m.amount), 0);
@@ -45,7 +45,7 @@
     if (store.mode !== 'local') {
       const result = await store.client.rpc('cash_register', { p_action: action, p: payload });
       if (result.error) {
-        if (['PGRST202', '42883'].includes(result.error.code)) throw Error('Atualização do caixa pendente: execute as migrações 08 e 09 no SQL Editor do Supabase.');
+        if (['PGRST202', '42883'].includes(result.error.code)) throw Error('Atualização do caixa pendente: execute as migrações 08, 09 e 10 no SQL Editor do Supabase.');
         throw Error(result.error.message);
       }
       return result.data;
@@ -71,8 +71,9 @@
         db.orderStates ||= {};
         db.orderStates[order.id] = {...order,status:payload.status,confirmedAt:payload.status==='confirmed'?now:null};
       } else if (action === 'open') {
-        if (db.sessions.some(s => !s.closed_at || s.business_date === window.CashClosingCore.dayKey())) throw Error('Já existe um caixa aberto ou encerrado hoje.');
-        db.sessions.unshift({ id: crypto.randomUUID(), business_date: window.CashClosingCore.dayKey(), opening_cash: core.amount(payload.opening_cash), opened_at: now, opened_by: responsible, closed_at: null });
+        if (payload.id && db.sessions.some(s => s.id === payload.id)) return preview(db,payload.id);
+        if (db.sessions.some(s => !s.closed_at)) throw Error('Já existe um caixa aberto. Feche esse expediente antes de abrir outro.');
+        db.sessions.unshift({ id: payload.id || crypto.randomUUID(), business_date: window.CashClosingCore.dayKey(), opening_cash: core.amount(payload.opening_cash), opened_at: now, opened_by: responsible, closed_at: null });
         syncConfirmed(db,responsible);
       } else {
         const fresh = preview(db, payload.session_id), session = fresh.session;

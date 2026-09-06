@@ -49,7 +49,7 @@ Por ser um projeto estático, pode ser publicado no GitHub Pages, Vercel ou Netl
 
 ## Fechamento de caixa
 
-A aba **Fechamento de caixa**, abaixo de **Saída**, confere o dinheiro físico, resume pagamentos e salva comprovantes diários com histórico de correções e impressão em PDF. Para ativar no banco, execute `supabase/06-fechamento-caixa.sql` no SQL Editor. Veja o passo a passo em [FECHAMENTO-DE-CAIXA.md](FECHAMENTO-DE-CAIXA.md).
+A aba **Fechamento de caixa** permite abrir e encerrar expedientes, contabiliza pedidos confirmados e preserva os comprovantes no histórico. Para instalar, aplique as migrações 06, 08, 09 e 10 na ordem. Se o 09 já estiver instalado, aplique apenas `supabase/10-rotina-diaria-reset.sql`. O reset geral do Controle geral remove também caixas e comprovantes de teste, preservando o catálogo. Veja a rotina e as instruções de limpeza em [CAIXA-ROTINA.md](CAIXA-ROTINA.md).
 
 ## Instalação como aplicativo (PWA)
 

@@ -213,11 +213,7 @@
 
   document.querySelector('#openResetData').addEventListener('click', async () => {
     try {
-      const data = await getFreshSnapshot();
-      if (!data.orders.length && !data.expenses.length) {
-        notify('O histórico operacional já está vazio.');
-        return;
-      }
+      await getFreshSnapshot();
       resetForm.reset();
       syncResetButton();
       resetDialog.showModal();
@@ -244,11 +240,11 @@
     try {
       const verified = await StoreAPI.verifyAdminPassword(password);
       if (!verified) throw new Error('Senha incorreta. O histórico não foi alterado.');
-      const result = await StoreAPI.resetOperationalData();
+      const result = await StoreAPI.resetOperationalData(resetForm.elements.confirmation.value.trim().toUpperCase());
       resetDialog.close();
       updateView({ products: snapshot.products, orders: [], expenses: [] });
       window.dispatchEvent(new CustomEvent('snoop:data-reset'));
-      notify(`Reset concluído: ${Number(result?.orders) || 0} pedidos e ${Number(result?.expenses) || 0} saídas apagados.`);
+      notify(`Reset concluído: ${Number(result?.orders) || 0} pedidos, ${Number(result?.expenses) || 0} saídas e ${Number(result?.closings) || 0} fechamentos apagados. Catálogo preservado.`);
     } catch (error) {
       notify(error.message || 'Não foi possível resetar o histórico.');
       resetButton.disabled = false;

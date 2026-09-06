@@ -28,6 +28,7 @@ test('confirmar recebe, bloqueia edição, contabiliza saídas e fecha o caixa',
   assert.match(rejection,/não pode ser alterado/);
   await page.evaluate(()=>StoreAPI.updateOrderStatus('10000000-0000-0000-0000-000000000001','confirmed'));
   await page.locator('[data-view=cashClosing]').click();
+  await page.locator('#registerContent').waitFor({state:'visible'});
   assert.match(await page.locator('#registerPendingTitle').innerText(),/Nenhum/);
   assert.equal(await page.locator('#registerCloseForm button[type=submit]').isDisabled(),false);
   assert.equal(await page.locator('[data-verify]').count(),0);
@@ -48,12 +49,31 @@ test('confirmar recebe, bloqueia edição, contabiliza saídas e fecha o caixa',
   assert.match(await page.locator('#registerDifference').innerText(),/Confere/);
   assert.equal(await page.locator('#registerNotesLabel').isVisible(),false);
   await page.locator('#registerCloseForm button[type=submit]').click();await page.locator('#saveCashClosing').click();await page.locator('#cashClosingConfirm').waitFor({state:'hidden'});
-  await page.locator('#registerSaved').waitFor({state:'visible'});assert.equal(await page.locator('#registerEntryCard').isVisible(),false);
-  await page.reload();await page.locator('[data-view=cashClosing]').click();await page.locator('#registerSaved').waitFor({state:'visible'});
-  await page.locator('#registerRevise').click();await count.fill('116');await page.locator('#registerCloseForm [name=notes]').fill('Moeda encontrada na recontagem');await page.locator('#registerCloseForm button[type=submit]').click();await page.locator('#saveCashClosing').click();await page.locator('#cashClosingConfirm').waitFor({state:'hidden'});
-  assert.match(await page.locator('#registerSaved').innerText(),/versão 2/);
-  await page.locator('#registerViewLatest').click();assert.match(await page.locator('#closingReportBody').innerText(),/Moeda encontrada/);await page.locator('#cashClosingReport [data-close-closing]').first().click();
+  await page.locator('#registerOpening').waitFor({state:'visible'});assert.equal(await page.locator('#registerEntryCard').isVisible(),false);
+  await page.reload();await page.locator('[data-view=cashClosing]').click();await page.locator('#registerOpening').waitFor({state:'visible'});
+  await page.locator('[data-revise-session]').first().click();await count.fill('116');await page.locator('#registerCloseForm [name=notes]').fill('Moeda encontrada na recontagem');await page.locator('#registerCloseForm button[type=submit]').click();await page.locator('#saveCashClosing').click();await page.locator('#cashClosingConfirm').waitFor({state:'hidden'});
+  assert.match(await page.locator('#registerHistory').innerText(),/Versão 2/);
+  await page.locator('[data-report]').first().click();assert.match(await page.locator('#closingReportBody').innerText(),/Moeda encontrada/);await page.locator('#cashClosingReport [data-close-closing]').first().click();
+  await page.locator('#registerOpenForm input').fill('20');await page.locator('#registerOpenForm button').click();await page.locator('#registerContent').waitFor({state:'visible'});
+  assert.match(await page.locator('#registerSalesTotal').innerText(),/0,00/,'novo caixa sem duplicar vendas');
+  assert.match(await page.locator('.register-expected').innerText(),/20,00/);
+  await count.fill('20');await page.locator('#registerCloseForm button[type=submit]').click();await page.locator('#saveCashClosing').click();await page.locator('#cashClosingConfirm').waitFor({state:'hidden'});
+  assert.equal(await page.locator('[data-report]').count(),3,'dois caixas e uma correção preservados');
   for(const width of [390,768]){await page.setViewportSize({width,height:900});await page.waitForTimeout(300);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`sem overflow em ${width}`);assert.ok((await page.locator('.admin-sidebar').boundingBox()).x<0,'menu recolhido no celular');await page.screenshot({path:`.test-tools/register-${width}.png`,fullPage:true});}
+  await page.setViewportSize({width:1536,height:1100});await page.waitForTimeout(300);
+  const catalogBefore=await page.evaluate(()=>localStorage.getItem('snoop_products_v1'));
+  await page.locator('[data-view=control]').click();await page.locator('#openResetData').click();
+  await page.locator('#resetDataForm [name=password]').fill('incorreta');await page.locator('#resetDataForm [name=confirmation]').fill('ZERAR');await page.locator('#confirmResetData').click();
+  assert.equal(await page.locator('#resetDataDialog').isVisible(),true);
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('snoop_register_v2')).closings.length),3);
+  await page.locator('#resetDataForm [name=password]').fill('test');await page.locator('#confirmResetData').click();await page.locator('#resetDataDialog').waitFor({state:'hidden'});
+  assert.equal(await page.evaluate(()=>localStorage.getItem('snoop_products_v1')),catalogBefore);
+  await page.locator('[data-view=cashClosing]').click();await page.locator('#registerOpening').waitFor({state:'visible'});assert.equal(await page.locator('[data-report]').count(),0);
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('snoop_orders_v1')).length),0);
+  // Só um caixa vazio também pode ser removido: não depende de pedidos/saídas.
+  await page.locator('#registerOpenForm input').fill('0');await page.locator('#registerOpenForm button').click();await page.locator('#registerContent').waitFor({state:'visible'});
+  await page.locator('[data-view=control]').click();await page.locator('#openResetData').click();await page.locator('#resetDataForm [name=password]').fill('test');await page.locator('#resetDataForm [name=confirmation]').fill('ZERAR');await page.locator('#confirmResetData').click();await page.locator('#resetDataDialog').waitFor({state:'hidden'});
+  await page.locator('[data-view=cashClosing]').click();await page.locator('#registerOpening').waitFor({state:'visible'});
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 });

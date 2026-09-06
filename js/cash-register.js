@@ -11,7 +11,7 @@
   view.innerHTML = `
     <div class="closing-toolbar"><div><span class="eyebrow">Distribuidora Snoop</span><h2>Fechamento de caixa</h2><p>Confira o dinheiro. O sistema organiza o restante.</p></div><span class="closing-timezone" id="registerDate">Alvarães · Amazonas</span></div>
     <p id="registerMessage" class="closing-message" role="status" hidden></p><p id="registerLoading" class="closing-help">Carregando caixa…</p>
-    <article id="registerOpening" class="closing-card" hidden><span class="card-kicker">Comece o expediente</span><h3>Abertura de caixa</h3><p class="closing-help">Conte o valor realmente deixado para troco. O saldo anterior não é transferido automaticamente.</p><form id="registerOpenForm"><label>Fundo de abertura (R$)${input('opening_cash')}</label><p class="closing-help register-actor"></p><button class="primary-button" type="submit">Abrir caixa</button></form></article>
+    <article id="registerOpening" class="closing-card" hidden><span class="card-kicker">Comece um novo expediente</span><h3>Abertura de caixa</h3><p class="closing-help">Os caixas encerrados ficam no histórico abaixo. Para trabalhar novamente, informe o dinheiro disponível para troco e abra um novo caixa. A data é automática; o saldo anterior não é transferido.</p><form id="registerOpenForm"><label>Fundo de abertura (R$)${input('opening_cash')}</label><p class="closing-help register-actor"></p><button class="primary-button" type="submit">Abrir novo caixa</button></form></article>
     <div id="registerContent" hidden><div id="registerSaved" class="closing-saved" hidden></div>
       <section class="closing-card register-sales" aria-labelledby="registerSalesTitle"><div class="register-sales-heading"><div><span class="card-kicker">Vendas confirmadas e recebidas</span><h3 id="registerSalesTitle">Total de vendas do dia</h3></div><strong id="registerSalesTotal">—</strong></div><div class="register-sales-methods" id="registerSalesMethods"></div><p class="closing-help" id="registerSalesHelp">Vendas do caixa aberto, antes das saídas. O fundo de abertura e os reforços não são vendas.</p></section>
       <div class="register-layout"><div class="register-left">
@@ -27,7 +27,7 @@
         <label>Tipo<select name="kind">${Object.entries(kinds).filter(([k])=>k!=='receipt').map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label>Forma de pagamento<select name="method">${Object.entries(methods).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label>Valor (R$)${input('amount',false)}</label><label id="registerOrderLabel">Pedido confirmado<select name="order_id"></select></label><label id="registerReceiptLabel" hidden>Recebimento original<select name="receipt_id"></select></label><label class="register-description">Descrição / motivo<input name="description" minlength="5" maxlength="300" required placeholder="Identifique o recebimento ou explique a saída"></label>
         </div><label id="registerRefundIdLabel" hidden>ID de recebimento de outro caixa (opcional)<input name="external_receipt_id" placeholder="Identificador no comprovante original"></label><button class="primary-button" type="submit">Registrar movimentação</button><p class="closing-help">Data e responsável são automáticos. Cada despesa entra uma única vez; sangria não é despesa.</p></form></article>
     </div><details class="closing-card closing-history" open><summary>Histórico de fechamentos</summary><div class="closing-history-head"><p>Comprovantes preservados, com horário, responsável e versões.</p><label>Mês<input type="month" id="registerMonth"></label></div><div id="registerHistory"></div><details class="closing-details"><summary>Fechamentos anteriores à nova rotina</summary><div id="registerLegacy"></div></details></details>`;
-  let state, actor = '', busy = false, revisionMode = false, generation = 0, historyRows = [], confirmPayload, selectedSession = null;
+  let state, actor = '', busy = false, revisionMode = false, generation = 0, historyGeneration = 0, historyRows = [], confirmPayload, selectedSession = null;
   const openForm = $('#registerOpenForm'), closeForm = $('#registerCloseForm'), movementForm = $('#registerMovementForm');
   const message = (text, error = false) => { const el=$('#registerMessage'); el.hidden=!text; el.textContent=text; el.className=`closing-message ${error?'error':'success'}`; };
   const values = form => Object.fromEntries(new FormData(form));
@@ -92,13 +92,14 @@
     } catch(e) { if(request===generation){message(e.message,true);$('#registerLoading').textContent='Não foi possível atualizar o caixa.'; state=null; $('#registerContent').hidden=true; $('#registerOpening').hidden=true;} }
   }
   async function history() {
+    const request=++historyGeneration;
     const month=$('#registerMonth').value;
     try {
-      const rows=await api.rpc('history',{month}); if(month!==$('#registerMonth').value)return; historyRows=rows;
+      const rows=await api.rpc('history',{month}); if(request!==historyGeneration||month!==$('#registerMonth').value)return; historyRows=rows;
       $('#registerHistory').innerHTML=rows.map(r=>`<div class="closing-history-row"><div><strong>${r.business_date.split('-').reverse().join('/')}</strong><small>Versão ${r.revision}</small></div><div>${esc(r.responsible)}<small>${time(r.created_at)}</small></div><strong>${r.difference===0?'Confere':money(r.difference)}</strong><div class="closing-buttons"><button class="secondary-button" data-report="${esc(r.id)}">Ver comprovante</button>${rows.some(other=>other.session_id===r.session_id&&other.revision>r.revision)?'':`<button class="secondary-button" data-revise-session="${esc(r.session_id)}">Corrigir contagem</button>`}</div></div>`).join('')||'<p class="closing-help">Nenhum fechamento neste mês.</p>';
-      const legacy=await window.CashClosingStore.history(month); if(month!==$('#registerMonth').value)return;
+      const legacy=await window.CashClosingStore.history(month); if(request!==historyGeneration||month!==$('#registerMonth').value)return;
       $('#registerLegacy').innerHTML=legacy.map(r=>`<div class="closing-history-row"><span>${esc(r.closing_date)} · v${r.revision}</span><span>${esc(r.responsible)}</span><span>${money(r.counted_cash)}</span><button class="secondary-button" data-legacy="${esc(r.id)}">Ver comprovante</button></div>`).join('')||'<p class="closing-help">Nenhum registro anterior neste mês.</p>';
-    } catch(e){$('#registerHistory').textContent=e.message;}
+    } catch(e){if(request===historyGeneration)$('#registerHistory').textContent=e.message;}
   }
   async function mutate(action,payload,form) {
     if(busy)return; busy=true; ++generation;
@@ -107,7 +108,9 @@
     catch(e){message(e.message,true);await load();return false;}
     finally {busy=false;buttons.forEach(b=>b.disabled=false);syncCount();}
   }
-  openForm.addEventListener('submit',e=>{e.preventDefault();if(openForm.reportValidity())mutate('open',values(openForm),openForm);});
+  let openingRequest=null;
+  openForm.addEventListener('input',()=>{openingRequest=null;});
+  openForm.addEventListener('submit',e=>{e.preventDefault();if(openForm.reportValidity()){openingRequest ||= crypto.randomUUID();mutate('open',{...values(openForm),id:openingRequest},openForm).then(saved=>{if(saved)openingRequest=null;});}});
   movementForm.addEventListener('change',movementKind);
   let movementRequest=null;
   movementForm.addEventListener('input',()=>{movementRequest=null;});
@@ -127,7 +130,7 @@
   });
   $('#saveCashClosing').addEventListener('click',async()=>{
     if(busy||!confirmPayload)return; busy=true;++generation;$('#saveCashClosing').disabled=true;
-    try{state=await api.rpc('close',confirmPayload);revisionMode=false;closeForm.reset();dialog.close();render();await history();message('Fechamento salvo com horário, responsável e comprovante.');}
+    try{const saved=await api.rpc('close',confirmPayload);revisionMode=false;selectedSession=null;state=null;closeForm.reset();dialog.close();$('#registerMonth').value=saved.session.business_date.slice(0,7);await load();await history();message('Caixa encerrado e armazenado no histórico. Você já pode iniciar um novo expediente.');}
     catch(e){$('#closingConfirmError').hidden=false;$('#closingConfirmError').textContent=e.message;}
     finally{busy=false;$('#saveCashClosing').disabled=false;syncCount();}
   });
@@ -157,7 +160,14 @@
   $('#registerDenominations').innerHTML=[200,100,50,20,10,5,2,1,.5,.25,.1,.05,.01].map(n=>`<label>${money(n)}<input type="number" min="0" max="100000" step="1" value="0" data-denomination="${n}" aria-label="Quantidade de ${money(n)}"></label>`).join('');
   $('#useDenominations').addEventListener('click',()=>{const inputs=[...document.querySelectorAll('[data-denomination]')];if(inputs.some(i=>!i.reportValidity()))return;closeForm.elements.counted_cash.value=(inputs.reduce((n,i)=>n+core.cents(i.dataset.denomination)*Number(i.value),0)/100).toFixed(2);syncCount();});
   $('#registerMonth').value=window.CashClosingCore.dayKey().slice(0,7);$('#registerMonth').addEventListener('change',history);
-  window.AdminCashClosing={open:()=>{selectedSession=null;revisionMode=false;state=null;load();history();}};
+  window.AdminCashClosing={open:()=>{selectedSession=null;revisionMode=false;state=null;$('#registerContent').hidden=true;$('#registerOpening').hidden=true;$('#registerLoading').hidden=false;$('#registerLoading').textContent='Carregando caixa…';load();history();}};
+  window.addEventListener('snoop:data-reset',()=>{
+    ++generation;++historyGeneration;historyRows=[];state=null;selectedSession=null;revisionMode=false;confirmPayload=null;openingRequest=null;movementRequest=null;
+    closeForm.reset();openForm.reset();movementForm.reset();message('');
+    $('#registerContent').hidden=true;$('#registerOpening').hidden=true;$('#registerHistory').innerHTML='';$('#registerLegacy').innerHTML='';$('#closingReportBody').innerHTML='';
+    $('#cashClosingReport').close();dialog.close();
+    if(!view.hidden){load();history();}
+  });
   window.addEventListener('storage',()=>{if(!view.hidden&&!busy&&!dialog.open)load();});
   window.addEventListener('focus',()=>{if(!view.hidden&&!busy&&!dialog.open)load();});
   window.setInterval(()=>{if(!view.hidden&&!document.hidden&&!busy&&!dialog.open)load();},15000);

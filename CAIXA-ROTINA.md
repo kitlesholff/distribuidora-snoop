@@ -2,9 +2,9 @@
 
 ## Ativação
 
-Com a estrutura atual e `supabase/06-fechamento-caixa.sql` instaladas, execute `supabase/08-abertura-fechamento.sql` e depois **todo** o arquivo `supabase/09-confirmacao-recebimento.sql` no SQL Editor. Se o 08 já estiver instalado, execute somente o 09. Depois publique os arquivos atualizados do painel. As migrações são repetíveis e preservam os comprovantes.
+Com a estrutura atual e `supabase/06-fechamento-caixa.sql` instaladas, execute as migrações **08, 09 e 10**, nessa ordem. Se o 09 já estiver instalado, execute somente **`supabase/10-rotina-diaria-reset.sql`**. Depois publique os arquivos atualizados do painel. Instalar a migração 10 não apaga dados: ela habilita a rotina diária e o reset administrativo explícito.
 
-O 08 cria sessões, movimentações e comprovantes. O 09 faz a confirmação contabilizar o recebimento automaticamente e bloqueia alterações/exclusões em pedidos confirmados e seus itens, também no banco. Não reexecute scripts antigos de permissões/reset sem reaplicar a sequência 08 e 09.
+O 08 cria sessões, movimentações e comprovantes. O 09 faz a confirmação contabilizar o recebimento automaticamente e bloqueia alterações/exclusões em pedidos confirmados e seus itens. O 10 permite expedientes sucessivos e corrige o reset completo. Não reexecute scripts antigos sem reaplicar as versões seguintes na ordem.
 
 **A migração foi testada em PostgreSQL isolado (PGlite), mas não aplicada à produção nesta alteração.** Sem ela, a tela exibe instruções de ativação. Em modo Supabase, não há gravação local alternativa.
 
@@ -18,6 +18,7 @@ O 08 cria sessões, movimentações e comprovantes. O 09 faz a confirmação con
 6. No fechamento normal, informe apenas **dinheiro contado na gaveta**. Pode usar o contador de notas/moedas. Falta, sobra e correção exigem justificativa.
 7. Somente pedidos com status **pendente** aparecem aguardando confirmação. Cancelados representam compras adiadas e não geram entrada. Pode manter pedidos pendentes para outro expediente, com justificativa. Se o cliente desistir após uma compra confirmada, registre o valor como **saída de caixa**, identificando a devolução; preserve o pedido confirmado.
 8. Clique em **Conferir e fechar caixa**, revise o resumo e confirme. O servidor recalcula e recusa a gravação se os dados mudaram.
+9. O caixa encerrado vai para **Histórico de fechamentos** e a tela volta à abertura. No próximo expediente, informe novamente o fundo realmente disponível. A abertura cria outro caixa; não reabre nem altera o anterior.
 
 ## Cálculo e datas
 
@@ -25,7 +26,7 @@ O 08 cria sessões, movimentações e comprovantes. O 09 faz a confirmação con
 
 Exemplo: fundo de R$ 100 + recebimento de R$ 40 + reforço de R$ 20 − despesa de R$ 25 − sangria de R$ 10 − devolução de R$ 5 = **R$ 120 esperados**. Pix/cartão ficam fora da gaveta.
 
-O recebimento usa o horário da confirmação e pertence ao caixa aberto. Um pedido criado ontem e confirmado hoje entra na sessão atual. Sem caixa aberto, a confirmação é recusada e o pedido continua pendente. A data exibida é a abertura em `America/Manaus` (Alvarães). Se o expediente atravessar a meia-noite, continua na sessão aberta; encerre-a antes de abrir a seguinte. Há no máximo um caixa aberto e uma abertura por data.
+O recebimento usa o horário da confirmação e pertence ao caixa aberto. Um pedido criado ontem e confirmado hoje entra na sessão atual. Sem caixa aberto, a confirmação é recusada e o pedido continua pendente. A data exibida é a abertura em `America/Manaus` (Alvarães). Se o expediente atravessar a meia-noite, continua na sessão aberta; encerre-a antes de abrir a seguinte. Há no máximo um caixa aberto, mas podem existir vários expedientes encerrados na mesma data. Cada expediente tem seu fundo, vendas, contagem e comprovantes; vendas do anterior não são somadas outra vez.
 
 A tela se atualiza ao entrar, voltar à janela, após lançamentos e a cada 15 segundos enquanto visível. A contagem digitada é preservada. O servidor verifica novamente os dados ao salvar.
 
@@ -40,10 +41,18 @@ Para confirmados antigos sem horário de confirmação, a compatibilização usa
 - Cada fechamento preserva fundo, movimentos, pendências, contagem, diferença, motivo, usuário e horário. As versões não devem ser somadas.
 - Depois de fechar, os lançamentos da sessão não podem ser alterados. **Corrigir contagem**, no caixa ou histórico, cria uma versão com justificativa. Corrige a contagem física; não reescreve fundo, recebimentos ou despesas.
 - Devoluções exigem recebimento original, mesma forma de pagamento e valor dentro do recebido ainda não devolvido. O ID consta nos lançamentos e comprovantes; para outro caixa, informe-o no campo de recebimento anterior. Devolver não recria automaticamente uma dívida do cliente.
-- Despesas vinculadas ao caixa não podem ser excluídas. O reset operacional fica bloqueado após a primeira abertura para preservar vínculos e pendências.
+- Despesas vinculadas ao caixa não podem ser excluídas individualmente. O fechamento normal preserva todos os comprovantes. Apenas o **reset geral explícito** descrito abaixo remove esses dados em conjunto.
 - O comprovante pode ser impresso ou salvo em PDF pelo navegador.
 - **Painel** e relatório geral continuam resumindo pedidos confirmados e despesas. A conferência dos recebimentos efetivos e dinheiro físico está em **Fechamento de caixa**.
 - No modo local, os dados de demonstração ficam no navegador. Identidade validada, transações e proteção contra alterações diretas dependem do Supabase.
+
+## Limpeza dos dados de teste antes da entrega
+
+Em **Controle geral → Começar do zero → Iniciar reset protegido**, informe a senha atual e digite **ZERAR**. Confirme **Apagar histórico**.
+
+Essa operação apaga todos os pedidos (inclusive confirmados), itens vendidos, saídas, recebimentos, caixas abertos/encerrados e históricos de fechamentos, inclusive versões antigas. Funciona também quando há somente um caixa vazio, sem pedidos ou despesas. Não distingue registros de teste de registros reais: é uma limpeza geral.
+
+Produtos, categorias, disponibilidade, imagens e acesso administrativo são preservados. O sistema fica pronto para uma primeira abertura limpa. O reset não faz parte do fechamento diário; use-o para a preparação da entrega conforme necessário. Em modo Supabase a limpeza é uma transação única, com acesso administrativo e confirmação explícita. A instalação do SQL não executa a limpeza.
 
 ## Testes isolados
 

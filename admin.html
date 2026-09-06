@@ -148,7 +148,7 @@
                 <div><span>Pedidos</span><strong id="resetScopeOrders">0 registros</strong></div>
                 <div><span>Saídas financeiras</span><strong id="resetScopeExpenses">0 registros</strong></div>
               </div>
-              <div class="preserved-data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg><span><strong>Catálogo e fechamentos serão preservados</strong><small>Produtos, categorias, estoque, imagens e comprovantes de caixa não serão apagados.</small></span></div>
+              <div class="preserved-data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg><span><strong>Catálogo e acesso serão preservados</strong><small>Produtos, categorias, disponibilidade, imagens e usuários não serão apagados. Caixas e comprovantes também serão removidos pelo reset.</small></span></div>
               <button class="danger-reset-button" id="openResetData" type="button"><span>⟲</span> Iniciar reset protegido</button>
             </article>
           </div>
@@ -197,7 +197,7 @@
     <dialog id="resetDataDialog" class="product-dialog reset-data-dialog">
       <form method="dialog" id="resetDataForm">
         <div class="drawer-head"><div><span class="eyebrow">Confirmação obrigatória</span><h2>Resetar histórico</h2></div><button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Fechar">×</button></div>
-        <div class="reset-dialog-warning"><span>!</span><div><strong>Esta ação não poderá ser desfeita</strong><p>Todos os pedidos e todas as saídas financeiras serão apagados. Exporte uma cópia antes de continuar. O histórico de fechamentos de caixa será preservado, incluindo as cópias dos movimentos conferidos.</p></div></div>
+        <div class="reset-dialog-warning"><span>!</span><div><strong>Esta ação não poderá ser desfeita</strong><p>Todos os pedidos, saídas, recebimentos, caixas abertos e históricos de fechamentos (incluindo versões antigas) serão apagados. Use esta limpeza para remover os dados de teste antes da entrega. Produtos, categorias, imagens e acesso administrativo serão preservados.</p></div></div>
         <label>Senha atual<input name="password" type="password" required autocomplete="current-password" placeholder="Digite sua senha" /></label>
         <label>Confirmação<input name="confirmation" required autocomplete="off" placeholder="Digite ZERAR" /><small>Digite <strong>ZERAR</strong> exatamente como mostrado.</small></label>
         <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit" formnovalidate>Cancelar</button><button class="confirm-reset-button" id="confirmResetData" type="button" disabled>Apagar histórico</button></div>
@@ -220,11 +220,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/storage.js?v=20260906-confirmation"></script>
-    <script src="js/admin-control.js?v=20260904-2"></script>
+    <script src="js/storage.js?v=20260906-reset"></script>
+    <script src="js/admin-control.js?v=20260906-reset"></script>
     <script src="js/cash-closing-core.js?v=1"></script>
     <script src="js/cash-closing-store.js?v=1"></script>
-    <script src="js/cash-register-core.js?v=4"></script><script src="js/cash-register-store.js?v=3"></script><script src="js/cash-register.js?v=4"></script>
+    <script src="js/cash-register-core.js?v=4"></script><script src="js/cash-register-store.js?v=5"></script><script src="js/cash-register.js?v=5"></script>
     <script src="js/admin.js?v=20260906-confirmation"></script>
     <script src="js/pwa.js?v=1"></script>
   </body>

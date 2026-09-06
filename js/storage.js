@@ -233,21 +233,30 @@
       if (error.code === 'invalid_credentials' || /invalid login credentials/i.test(error.message || '')) return false;
       throw error;
     },
-    async resetOperationalData() {
+    async resetOperationalData(confirmation) {
+      if (confirmation !== 'ZERAR') throw new Error('Digite ZERAR para confirmar a limpeza geral.');
+      if (!await this.isAuthenticated()) throw new Error('Entre no painel para executar o reset.');
       if (!hasCloud) {
-        if (JSON.parse(localStorage.getItem('snoop_register_v2') || '{"sessions":[]}').sessions.length) throw new Error('O caixa possui histórico financeiro protegido. O reset operacional não está disponível após a primeira abertura.');
+        const reset = () => {
+        const cash = JSON.parse(localStorage.getItem('snoop_register_v2') || '{"sessions":[],"movements":[],"closings":[]}');
         const result = {
           orders: JSON.parse(localStorage.getItem(orderKey) || '[]').length,
-          expenses: localExpenses().length
+          expenses: localExpenses().length,
+          sessions: cash.sessions.length, movements:cash.movements.length,
+          closings:cash.closings.length + JSON.parse(localStorage.getItem('snoop_cash_closings_v1') || '[]').length
         };
         localStorage.setItem(orderKey, '[]');
         localStorage.setItem(expenseKey, '[]');
+        localStorage.removeItem('snoop_register_v2');
+        localStorage.removeItem('snoop_cash_closings_v1');
         return result;
+        };
+        return navigator.locks ? navigator.locks.request('snoop_register_v2',reset) : reset();
       }
-      const { data, error } = await client.rpc('reset_operational_data');
+      const { data, error } = await client.rpc('reset_operational_data', {p_confirmation:confirmation});
       if (error) {
         if (['PGRST202', '42883'].includes(error.code)) {
-          throw new Error('Execute o arquivo supabase/05-controle-geral.sql no SQL Editor do Supabase antes de usar o reset.');
+          throw new Error('Execute supabase/10-rotina-diaria-reset.sql no SQL Editor do Supabase para ativar a limpeza geral.');
         }
         throw error;
       }
