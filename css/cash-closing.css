@@ -85,3 +85,65 @@
 @media(max-width:1250px){.closing-toolbar{align-items:flex-start;flex-direction:column;gap:12px}.closing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.closing-layout{grid-template-columns:1fr}.closing-saved{align-items:flex-start;flex-direction:column}}
 @media(max-width:650px){.closing-card{padding:18px}.closing-datebar{padding:15px}.closing-datebar label,.closing-datebar .refresh-button{width:100%}.closing-status{margin:0}.closing-toolbar h2{font-size:1.5rem}.closing-metrics{gap:8px}.closing-metrics article{padding:13px}.closing-history-head{align-items:stretch;flex-direction:column}.closing-history-row{grid-template-columns:1fr 1fr;gap:10px}.closing-history-row button{justify-self:start}.closing-equation>div{align-items:flex-start;flex-direction:column;gap:4px}.closing-confirm-dialog .dialog-actions,.closing-report-dialog .dialog-actions{flex-wrap:wrap}.closing-table{font-size:.67rem}}
 @media(prefers-reduced-motion:reduce){.cash-closing-view *{scroll-behavior:auto;transition:none}}
+
+/* Rotina com abertura e livro de recebimentos. */
+.cash-closing-view [hidden]{display:none!important}
+.cash-closing-view{--register-yellow:#ffda00}
+.admin-main:has(>#cashClosingView:not([hidden]))>.admin-header>div{display:none}
+.admin-main:has(>#cashClosingView:not([hidden]))>.admin-header{justify-content:flex-end;margin-bottom:12px}
+.cash-closing-view .closing-toolbar h2,.cash-closing-view summary{font-family:Inter,system-ui,sans-serif}
+#expenseForm select{width:100%;min-height:46px;border:1px solid #353a40;border-radius:10px;background:#111;color:white;padding:10px;color-scheme:dark}
+@media(min-width:821px){.admin-main:has(>#cashClosingView:not([hidden]))>.admin-header{display:none}}
+.cash-closing-view .closing-toolbar h2{font-size:clamp(1.8rem,3.2vw,2.8rem);letter-spacing:-.04em}
+.cash-closing-view .closing-toolbar p{font-size:.95rem}
+.cash-closing-view .closing-timezone{border-radius:10px;background:#101315;border-color:#2b3034;color:#eee;padding:13px 16px;font-size:.83rem}
+.cash-closing-view .closing-card{border:1px solid #2c3134;border-radius:12px;background:linear-gradient(120deg,#111516,#0c0f10);padding:24px}
+.register-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.register-sales{margin-bottom:20px}
+.register-sales-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.register-sales-heading h3{margin:5px 0 0!important;font-size:1.3rem!important}
+.register-sales-heading>strong{font-size:clamp(1.8rem,3vw,2.5rem);color:var(--register-yellow);font-variant-numeric:tabular-nums}
+.register-sales-methods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.register-sales-methods>div{border:1px solid #2c3337;border-radius:10px;padding:15px;background:#101517}
+.register-sales-methods span,.register-sales-methods strong,.register-sales-methods small{display:block}
+.register-sales-methods span{font-size:.8rem;color:#c5cdd3}.register-sales-methods strong{font-size:1.25rem;margin:6px 0}.register-sales-methods small{font-size:.7rem;color:#99a6b0}
+#registerNotesReason{font-weight:400;margin-top:4px}
+@media(max-width:600px){.register-sales-heading{align-items:flex-start;flex-direction:column}.register-sales-methods{grid-template-columns:1fr;gap:8px}.register-sales-methods>div{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;padding:10px 13px}.register-sales-methods small{grid-column:1/-1}.register-sales-methods strong{font-size:1rem;margin:0}}
+.register-left{display:grid;gap:18px;min-width:0}
+.register-heading{display:flex;gap:17px;align-items:flex-start;margin-bottom:22px}
+.register-heading>span{color:var(--register-yellow);font-size:2rem;line-height:1.2}
+.register-heading h3{margin:0 0 5px;font-size:1.35rem;font-weight:750}
+.register-heading p{color:#aab3bc;font-size:.82rem;margin:0;line-height:1.5}
+.register-total{display:grid;grid-template-columns:27px minmax(0,1fr) auto auto;gap:13px;align-items:center;padding:17px 15px;border:1px solid #272d30;border-radius:10px;font-size:.79rem;min-height:61px;background:linear-gradient(110deg,#15191b,#101315)}
+.register-total .register-icon{font-size:1.5rem;color:#d5dce0}
+.register-total small{font-size:.61rem;background:#252d30;border-radius:20px;padding:6px 9px;color:#d9e4e7}
+.register-total strong{font-size:.85rem;text-align:right;min-width:80px;font-variant-numeric:tabular-nums}
+.register-expected{grid-template-columns:27px minmax(0,1fr) auto;margin-top:17px;padding-block:20px;border-color:#485047;font-size:1rem}
+.register-expected>span,.register-expected strong{color:var(--register-yellow);font-size:1.5rem}
+.register-payment{margin-top:9px;border:1px solid #2c3337;border-radius:10px;padding:15px}
+.register-payment summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;font-weight:700;flex-wrap:wrap}
+.register-payment summary strong{margin-left:auto}.register-payment summary>span{font-size:.62rem;background:#232c30;border-radius:6px;padding:6px 8px;font-weight:400}
+.register-verification{display:flex;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid #293035;padding:14px 0;font-size:.8rem;overflow-wrap:anywhere}
+.register-verification small{display:block;color:#a6b6b2;font-size:.66rem;margin-top:7px}
+.register-verification button{font-size:.65rem;flex-shrink:0}
+#registerCloseForm,#registerOpenForm{display:grid;gap:20px}
+#registerOpenForm{max-width:480px;margin-top:20px}
+#registerCloseForm input[name=counted_cash]{height:68px;border:2px solid var(--register-yellow);border-radius:11px;font-size:1.65rem;font-weight:700;margin-top:6px}
+.register-denominations summary{color:var(--register-yellow);text-decoration:underline;font-size:.83rem;cursor:pointer}
+#registerDenominations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-block:15px}
+.register-diff-section{border-top:1px solid #30383d;padding-top:20px}.register-diff-section h3{font-size:1.05rem}
+.register-diff-section .closing-difference{min-height:92px;display:flex;align-items:center;padding:20px;background:#242219;border-color:#4b4529;color:#c9bb8c;font-size:1rem}
+.register-diff-section .matched{background:#132a20;border-color:#376749;color:#95e3b0}.register-diff-section .unmatched{background:#2c2114;border-color:#7e5929;color:#ffcc81}
+.register-identity{border:1px solid #30383b;border-radius:10px;padding:6px 17px;color:#c8d0d6;font-size:.77rem;overflow-wrap:anywhere}
+.register-identity p{padding:8px 0;line-height:1.6}.register-identity p+p{border-top:1px solid #30383b;padding-top:16px}.register-identity span{float:right;color:#929ca4}
+.cash-closing-view .register-check{display:flex;align-items:center;gap:12px;line-height:1.5}.register-check input{width:19px;min-height:19px;accent-color:var(--register-yellow);flex-shrink:0}
+.cash-closing-view .primary-button{background:var(--register-yellow);color:#090b0c;border-radius:10px;min-height:52px;font-weight:800}
+.cash-closing-view button:disabled{opacity:.45;cursor:not-allowed}
+.register-pending,.register-entry{margin-top:18px}.register-pending summary{color:var(--register-yellow);cursor:pointer;font-weight:650;font-size:.85rem}
+.register-entry-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}.register-description{grid-column:span 2}
+.cash-closing-view select{width:100%;min-width:0;height:44px;padding:9px;border:1px solid #333c40;border-radius:9px;background:#0b0e10;color:#e1e7eb;color-scheme:dark}
+.cash-closing-view select:focus-visible{outline:2px solid var(--register-yellow)}
+.cash-closing-view .closing-history>summary{font-weight:700;cursor:pointer}.closing-history-head{margin-top:15px}.closing-history-head p{font-size:.8rem;color:#adb6be}
+@media(min-width:1251px){.cash-closing-view .closing-toolbar{flex-direction:row}}
+@media(max-width:1150px){.register-layout{grid-template-columns:1fr}.register-total{font-size:.85rem}.register-entry-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.cash-closing-view .closing-card{padding:18px 14px}.register-heading{gap:12px}.register-heading h3{font-size:1.12rem}.register-total{gap:9px;padding:14px 10px;grid-template-columns:22px minmax(0,1fr) auto}.register-total small{display:none}.register-total strong{min-width:0;font-size:.79rem}.register-expected strong{font-size:1.15rem}.register-total{font-size:.73rem}.register-entry-grid{grid-template-columns:1fr}.register-description{grid-column:auto}.register-verification{align-items:stretch;flex-direction:column}.register-payment summary>span{width:100%;text-align:center}.register-identity span{float:none;display:block}.register-heading p{font-size:.76rem}}

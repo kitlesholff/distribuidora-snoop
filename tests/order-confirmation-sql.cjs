@@ -1,0 +1,54 @@
+const {PGlite}=require('../.test-tools/node_modules/@electric-sql/pglite');
+const fs=require('node:fs');const assert=require('node:assert/strict');
+const admin='00000000-0000-0000-0000-000000000001';
+(async()=>{const db=new PGlite();try{
+ await db.exec(`create role anon;create role authenticated;create schema auth;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.user_id',true),'')::uuid$$;
+ create function auth.role() returns text language sql as $$select current_user::text$$;
+ create function auth.jwt() returns jsonb language sql as $$select '{"email":"admin@test"}'::jsonb$$;
+ create function public.is_admin() returns boolean language sql as $$select auth.uid()='${admin}'::uuid$$;
+ grant usage on schema auth to anon,authenticated;set test.user_id='${admin}';`);
+ const install=async name=>db.exec(fs.readFileSync('supabase/'+name,'utf8').replace(/create extension if not exists pgcrypto;/g,''));
+ for(const file of ['schema.sql','02-criar-saidas.sql','06-fechamento-caixa.sql','08-abertura-fechamento.sql'])await install(file);
+ await db.exec('grant select,update on public.orders to authenticated');
+ const rpc=async(action,p={})=>(await db.query('select public.cash_register($1,$2) data',[action,p])).rows[0].data;
+ const status=async(id,value='confirmed')=>(await db.query('select public.set_order_status($1,$2) data',[id,value])).rows[0].data;
+ const order=async(code,payment,state='pending',date='now()')=>(await db.query(`insert into public.orders(code,customer_name,delivery_type,payment,client_total,trusted_total,status,created_at) values($1,'Cliente','Retirada',$2,999,100,$3,${date}) returning id`,[code,payment,state])).rows[0].id;
+ const legacy=await order('ANTIGO','Dinheiro','confirmed');
+ const historical=await order('HISTORICO','Pix','confirmed',"now()-interval '1 day'");
+ let snap=await rpc('open',{opening_cash:50});
+ // Simula recebimento parcial já lançado: migração só completa o restante.
+ await rpc('movement',{session_id:snap.session.id,id:'30000000-0000-0000-0000-000000000001',kind:'receipt',method:'cash',amount:40,order_id:legacy,description:'Parte registrada anteriormente'});
+ await install('09-confirmacao-recebimento.sql');await install('09-confirmacao-recebimento.sql');
+ snap=await rpc('preview');assert.equal(snap.pending.length,0);assert.equal(snap.movements.reduce((n,m)=>n+m.amount,0),100);assert.equal(snap.movements.some(m=>m.order_id===historical),false);
+ assert.equal(snap.movements.every(m=>m.verified_at),true);
+ const cash=await order('DIN','Dinheiro','pending',"now()-interval '1 day'");
+ const pix=await order('PIX','Pix');const card=await order('CARD','Cartão de crédito');const cancelled=await order('ADIADO','Pix');
+ await db.exec(`insert into public.order_items(order_id,product_id,name,quantity,unit_price,subtotal) values('${cash}','produto','Teste',1,100,100)`);
+ await db.exec('set role authenticated');
+ await status(cancelled,'cancelled');snap=await rpc('preview');assert.equal(snap.pending.length,3);
+ for(const id of [cash,pix,card]){const row=await status(id);assert.ok(row.confirmed_at);await status(id);}
+ snap=await rpc('preview');assert.equal(snap.pending.length,0);
+ for(const id of [cash,pix,card])assert.equal(snap.movements.filter(m=>m.order_id===id).length,1);
+ assert.deepEqual(snap.movements.filter(m=>[cash,pix,card].includes(m.order_id)).map(m=>m.method).sort(),['card','cash','pix']);
+ await assert.rejects(status(cash,'cancelled'),/não pode ser alterado/);await assert.rejects(status(cash,'pending'),/não pode ser alterado/);
+ await assert.rejects(rpc('movement',{session_id:snap.session.id,kind:'receipt'}),/automático/);
+ await assert.rejects(db.query('update public.orders set trusted_total=1 where id=$1',[cash]),/permission denied/);
+ await db.exec('reset role');
+ await assert.rejects(db.query('update public.orders set payment=\'Pix\' where id=$1',[cash]),/não pode ser alterado/);
+ await assert.rejects(db.query('delete from public.orders where id=$1',[cash]),/não pode ser alterado/);
+ await assert.rejects(db.query('update public.order_items set quantity=2 where order_id=$1',[cash]),/não podem ser alterados/);
+ await assert.rejects(db.query('delete from public.order_items where order_id=$1',[cash]),/não podem ser alterados/);
+ await assert.rejects(db.query('insert into public.order_items(order_id,product_id,name,quantity,unit_price,subtotal) values($1,\'x\',\'Item\',1,5,5)',[cash]),/não podem ser alterados/);
+ await db.exec('set role authenticated');
+ snap=await rpc('movement',{session_id:snap.session.id,id:'30000000-0000-0000-0000-000000000002',kind:'expense',method:'cash',amount:100,description:'Devolução após compra confirmada'});
+ assert.equal((await status(cash)).status,'confirmed');
+ const closed=await rpc('close',{session_id:snap.session.id,fingerprint:snap.fingerprint,revision:0,counted_cash:150,notes:'',keep_pending:false});
+ assert.equal(closed.latest.expected_cash,150);assert.equal(closed.latest.difference,0);
+ // Confirmar sem caixa não altera pedido nem cria receita.
+ await db.exec('reset role');const later=await order('DEPOIS','Pix');await db.exec('set role authenticated');
+ await assert.rejects(status(later),/Abra o caixa/);
+ assert.equal((await db.query('select status from public.orders where id=$1',[later])).rows[0].status,'pending');
+ await db.exec(`set test.user_id='00000000-0000-0000-0000-000000000002'`);await assert.rejects(status(later),/Acesso negado/);
+ console.log('OK: confirmação contabiliza dinheiro/Pix/cartão uma vez, antigos conciliados sem duplicação, cancelados excluídos, pedidos/itens imutáveis, saída posterior e fechamento corretos.');
+}finally{await db.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

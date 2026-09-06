@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css?v=20260905-orders" />
-    <link rel="stylesheet" href="css/cash-closing.css?v=1" />
+    <link rel="stylesheet" href="css/cash-closing.css?v=4" />
   </head>
   <body class="admin-body">
     <section class="admin-login" id="adminLogin" hidden>
@@ -95,11 +95,11 @@
           </div>
           <div class="expenses-layout">
             <article class="panel-card expense-form-card">
-              <div class="panel-heading"><div><span class="card-kicker">Controle financeiro</span><h2>Registrar saída</h2><p>Informe os dados de cada valor retirado do caixa.</p></div></div>
+              <div class="panel-heading"><div><span class="card-kicker">Controle financeiro</span><h2>Registrar saída</h2><p>Registre despesas do caixa aberto. O total será considerado automaticamente.</p></div></div>
               <form id="expenseForm">
-                <label>Observação<textarea name="description" required minlength="2" maxlength="300" placeholder="Ex.: Compra de embalagens"></textarea></label>
-                <div class="form-row"><label>Quanto foi gasto<input name="amount" required type="number" min="0.01" step="0.01" placeholder="0,00" /></label><label>Quem gastou<input name="spentBy" required minlength="2" maxlength="100" placeholder="Nome da pessoa" /></label></div>
-                <label>Data da saída<input name="spentAt" required type="date" /></label>
+                <label>Observação<textarea name="description" required minlength="5" maxlength="300" placeholder="Ex.: Compra de embalagens"></textarea></label>
+                <div class="form-row"><label>Quanto foi gasto<input name="amount" required type="number" min="0.01" step="0.01" placeholder="0,00" /></label><label>Forma de pagamento<select name="method" required><option value="cash">Dinheiro</option><option value="pix">Pix</option><option value="card">Cartão</option></select></label></div>
+                <p class="closing-help">Data e responsável vêm do caixa aberto. Para retiradas ou devoluções, use a aba Fechamento de caixa.</p>
                 <button class="expense-submit" type="submit"><span>−</span> Registrar saída</button>
               </form>
             </article>
@@ -110,56 +110,7 @@
           </div>
         </section>
 
-        <section class="admin-view cash-closing-view" id="cashClosingView" hidden>
-          <div class="closing-toolbar">
-            <div><span class="eyebrow">Conferência diária</span><h2>Feche o dia com tudo conferido</h2><p>Vendas, saídas e dinheiro em caixa, em um só lugar.</p></div>
-            <span class="closing-timezone">Alvarães · horário do Amazonas</span>
-          </div>
-          <div class="closing-datebar">
-            <label>Dia do caixa<input type="date" id="cashClosingDate" required /></label>
-            <button class="refresh-button" id="refreshCashClosing" type="button"><span class="refresh-icon" aria-hidden="true">↻</span> Atualizar conferência</button>
-            <span id="cashClosingStatus" class="closing-status">Selecione o dia</span>
-          </div>
-          <p class="closing-message" id="cashClosingMessage" role="status" hidden></p>
-          <div id="cashClosingContent" hidden>
-            <div class="closing-metrics">
-              <article class="income"><span>Vendas confirmadas</span><strong id="closingIncome">R$ 0,00</strong><small id="closingOrderCount">0 pedidos</small></article>
-              <article class="expense"><span>Saídas do dia</span><strong id="closingExpenses">R$ 0,00</strong><small>Todos os pagamentos</small></article>
-              <article class="net"><span>Saldo das movimentações</span><strong id="closingNet">R$ 0,00</strong><small>Vendas menos saídas</small></article>
-              <article class="pending"><span>Aguardando confirmação</span><strong id="closingPending">R$ 0,00</strong><small id="closingPendingCount">0 pedidos pendentes</small></article>
-            </div>
-            <div class="closing-saved" id="closingSaved" hidden><div><strong id="closingSavedTitle"></strong><p id="closingSavedText"></p></div><div class="closing-buttons"><button type="button" class="secondary-button compact" id="viewLatestClosing">Ver comprovante</button><button type="button" class="secondary-button compact" id="reviseClosing">Registrar correção</button></div></div>
-            <div class="closing-layout">
-              <article class="closing-card">
-                <span class="card-kicker">01 · Resumo do movimento</span><h3>Como o dia foi recebido</h3>
-                <div id="closingPayments" class="closing-payments"></div>
-                <div class="closing-channels"><div><span>Vendas presenciais</span><strong id="closingInPerson"></strong></div><div><span>Vendas online</span><strong id="closingOnline"></strong></div></div>
-                <p class="closing-help">Entram as vendas confirmadas de pedidos criados entre 00h e 23h59 deste dia, no horário de Alvarães. Cancelados não somam receita. As saídas seguem a data informada no lançamento.</p>
-                <details class="closing-details"><summary>Conferir pedidos e saídas do dia</summary><div id="closingMovementDetails"></div></details>
-              </article>
-              <article class="closing-card closing-count-card" id="closingFormCard">
-                <span class="card-kicker">02 · Conferência do dinheiro</span><h3>Quanto tem na gaveta?</h3>
-                <form id="cashClosingForm">
-                  <fieldset id="closingFields">
-                    <div class="form-row"><label>Dinheiro inicial (R$)<input name="opening_cash" type="number" min="0" max="9999999999.99" step="0.01" value="0" required /><small>Troco disponível antes das vendas.</small></label><label>Saídas em dinheiro (R$)<input name="cash_expenses" type="number" min="0" step="0.01" placeholder="0,00" required /><small id="closingCashExpenseHint">Parte das saídas do dia paga em dinheiro.</small></label></div>
-                    <div class="closing-equation"><span>Inicial + vendas em dinheiro − saídas em dinheiro</span><div><span>Dinheiro esperado</span><strong id="closingExpected">—</strong></div></div>
-                    <label>Dinheiro contado no fechamento (R$)<input name="counted_cash" type="number" min="0" max="9999999999.99" step="0.01" placeholder="Conte as notas e moedas" required /><small>Somente notas e moedas. Pix e cartão ficam fora desta contagem.</small></label>
-                    <div id="closingDifference" class="closing-difference" aria-live="polite"><span>Informe a contagem para conferir.</span></div>
-                    <label>Responsável pelo fechamento<input name="responsible" minlength="2" maxlength="100" placeholder="Nome de quem conferiu o caixa" required autocomplete="name" /></label>
-                    <label>Observações<textarea name="notes" maxlength="1000" rows="3" placeholder="Explique diferenças ou o motivo de uma correção."></textarea><small id="closingNotesHint">Obrigatório se houver sobra, falta ou uma correção.</small></label>
-                    <button type="submit" class="primary-button" id="prepareCashClosing">Conferir e fechar caixa</button>
-                    <p class="closing-help" id="closingPendingHelp">Conclua os pedidos pendentes do dia antes de fechar.</p>
-                  </fieldset>
-                </form>
-              </article>
-            </div>
-          </div>
-          <article class="closing-card closing-history">
-            <div class="closing-history-head"><div><span class="card-kicker">Arquivo de conferências</span><h3>Histórico de fechamentos</h3><p>Cada correção guarda uma nova versão do dia.</p></div><label>Mês<input type="month" id="cashClosingMonth" /></label></div>
-            <div id="cashClosingHistory" aria-live="polite"></div>
-          </article>
-        </section>
-
+        <section class="admin-view cash-closing-view" id="cashClosingView" hidden></section>
         <section class="admin-view general-control-view" id="controlView" hidden>
           <div class="control-toolbar">
             <div class="control-intro"><span class="eyebrow">Administração e segurança</span><h2>Central de controle</h2><p>Faça cópias dos registros e gerencie um novo início sem alterar o catálogo.</p></div>
@@ -237,7 +188,7 @@
         <div class="form-row"><label>Cliente<input name="customerName" required maxlength="80" value="Cliente balcão" /></label><label>Pagamento<select name="payment" required><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão de débito">Cartão de débito</option><option value="Cartão de crédito">Cartão de crédito</option></select></label></div>
         <div class="manual-items-head"><div><strong>Produtos</strong><small>Adicione os itens comprados presencialmente.</small></div><button class="secondary-button compact" type="button" id="addManualItem">+ Produto</button></div>
         <div class="manual-order-items" id="manualOrderItems"></div>
-        <div class="form-row"><label>Status inicial<select name="status"><option value="confirmed" selected>Confirmado</option><option value="pending">Pendente</option></select></label><label>Observações<input name="notes" maxlength="180" placeholder="Opcional" /></label></div>
+        <div class="form-row"><label>Status inicial<select name="status"><option value="confirmed" selected>Confirmado — pagamento recebido</option><option value="pending">Pendente</option></select></label><label>Observações<input name="notes" maxlength="180" placeholder="Opcional" /></label></div>
         <div class="manual-total"><span>Total do pedido</span><strong id="manualOrderTotal">R$ 0,00</strong></div>
         <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit">Cancelar</button><button class="primary-button" value="default" type="button" id="saveManualOrder">Salvar pedido</button></div>
       </form>
@@ -269,12 +220,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/storage.js?v=20260904-12"></script>
+    <script src="js/storage.js?v=20260906-confirmation"></script>
     <script src="js/admin-control.js?v=20260904-2"></script>
     <script src="js/cash-closing-core.js?v=1"></script>
     <script src="js/cash-closing-store.js?v=1"></script>
-    <script src="js/cash-closing.js?v=1"></script>
-    <script src="js/admin.js?v=20260905-orders"></script>
+    <script src="js/cash-register-core.js?v=4"></script><script src="js/cash-register-store.js?v=3"></script><script src="js/cash-register.js?v=4"></script>
+    <script src="js/admin.js?v=20260906-confirmation"></script>
     <script src="js/pwa.js?v=1"></script>
   </body>
 </html>

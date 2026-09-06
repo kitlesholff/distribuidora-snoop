@@ -1,3 +1,5 @@
+> Documentação da rotina anterior, mantida para consulta dos comprovantes antigos. Para a nova abertura e fechamento, use [CAIXA-ROTINA.md](CAIXA-ROTINA.md) e a migração 08.
+
 # Fechamento de caixa da Snoop
 
 ## Ativação no Supabase (uma vez)

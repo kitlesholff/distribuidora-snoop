@@ -1,0 +1,67 @@
+const { PGlite } = require('../.test-tools/node_modules/@electric-sql/pglite');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const core = require('../js/cash-register-core');
+const admin='00000000-0000-0000-0000-000000000001';
+(async()=>{
+ const db=new PGlite();
+ try {
+  await db.exec(`create role anon; create role authenticated; create schema auth;
+    create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.user_id',true),'')::uuid$$;
+    create function auth.role() returns text language sql as $$select current_user::text$$;
+    create function auth.jwt() returns jsonb language sql as $$select '{"email":"ana@snoop.test"}'::jsonb$$;
+    create function public.is_admin() returns boolean language sql as $$select auth.uid()='${admin}'::uuid$$;
+    grant usage on schema auth to anon,authenticated;set test.user_id='${admin}';`);
+  for(const file of ['schema.sql','02-criar-saidas.sql','06-fechamento-caixa.sql','08-abertura-fechamento.sql','08-abertura-fechamento.sql']) await db.exec(fs.readFileSync('supabase/'+file,'utf8').replace(/create extension if not exists pgcrypto;/g,''));
+  await db.exec(`insert into public.orders(id,code,customer_name,delivery_type,payment,client_total,trusted_total,status,created_at) values
+    ('10000000-0000-0000-0000-000000000001','ONTEM','Cliente','Retirada','Dinheiro',999,100,'confirmed',now()-interval '1 day'),
+    ('10000000-0000-0000-0000-000000000002','PEND','Cliente','Retirada','Pix',25,25,'pending',now());set role authenticated;`);
+  const rpc=async(action,p={})=>(await db.query('select public.cash_register($1,$2::jsonb) as data',[action,JSON.stringify(p)])).rows[0].data;
+  let s=await rpc('preview'); assert.equal(s.session,null);
+  s=await rpc('open',{opening_cash:100}); const sid=s.session.id;
+  assert.equal(s.session.opened_by,'ana@snoop.test');
+  await assert.rejects(rpc('open',{opening_cash:5}),/Já existe/);
+  let counter=0;
+  const movement=async(fields)=>rpc('movement',{session_id:sid,id:`20000000-0000-0000-0000-${String(++counter).padStart(12,'0')}`,description:'Lançamento de teste',...fields});
+  assert.equal(core.summarize(s.session,s.movements,s.pending).cashIncome,0,'confirmar não recebe');
+  s=await movement({kind:'receipt',method:'cash',amount:40,order_id:'10000000-0000-0000-0000-000000000001'});
+  s=await movement({kind:'receipt',method:'pix',amount:60,order_id:'10000000-0000-0000-0000-000000000001'});
+  assert.equal(s.pending.length,1); assert.equal(s.movements.length,2);
+  await assert.rejects(movement({kind:'receipt',method:'cash',amount:1,order_id:'10000000-0000-0000-0000-000000000001'}),/saldo pendente/);
+  await assert.rejects(movement({kind:'receipt',method:'pix',amount:25,order_id:'10000000-0000-0000-0000-000000000002'}),/Confirme/);
+  s=await movement({kind:'expense',method:'cash',amount:25});
+  s=await movement({kind:'expense',method:'pix',amount:30});
+  s=await movement({kind:'reinforcement',method:'cash',amount:20});
+  s=await movement({kind:'withdrawal',method:'cash',amount:10});
+  const receipt=s.movements.find(m=>m.kind==='receipt'&&m.method==='cash');
+  s=await movement({kind:'refund',method:'cash',amount:5,receipt_id:receipt.id});
+  await assert.rejects(movement({kind:'refund',method:'pix',amount:5,receipt_id:receipt.id}),/Devolução/);
+  await assert.rejects(movement({kind:'refund',method:'cash',amount:36,receipt_id:receipt.id}),/Devolução/);
+  const summary=core.summarize(s.session,s.movements,s.pending);assert.equal(summary.expected,120);assert.equal(summary.cashExpenses,25);assert.equal(summary.pix,60);
+  const close=(snap,overrides={})=>rpc('close',{session_id:sid,fingerprint:snap.fingerprint,revision:snap.latest?.revision||0,counted_cash:120,notes:'Manter pedido aguardando confirmação',keep_pending:true,...overrides});
+  await assert.rejects(close(s),/Confira os recebimentos/);
+  s=await rpc('verify',{session_id:sid,id:s.movements.find(m=>m.method==='pix'&&m.kind==='receipt').id});
+  await assert.rejects(close(s,{keep_pending:false}),/pendentes/);
+  await assert.rejects(close(s,{notes:''}),/justificativa/);
+  await assert.rejects(close(s,{counted_cash:-1}),/inválido/);
+  const stale=s;
+  s=await movement({kind:'reinforcement',method:'cash',amount:1});
+  await assert.rejects(close(stale),/mudaram/);
+  s=await close(s,{counted_cash:121});assert.equal(s.latest.expected_cash,121);assert.equal(s.latest.difference,0);
+  await assert.rejects(close(stale),/mudaram/);
+  await assert.rejects(movement({kind:'expense',method:'cash',amount:1}),/Caixa fechado/);
+  const first=JSON.stringify(s.latest.snapshot);
+  await assert.rejects(close(s,{counted_cash:122,notes:''}),/justificativa/);
+  s=await close(s,{counted_cash:122,notes:'Correção da contagem das moedas'});assert.equal(s.latest.revision,2);assert.equal(s.latest.difference,1);
+  const rows=await rpc('history',{month:s.session.business_date.slice(0,7)});assert.equal(rows.length,2);assert.equal(JSON.stringify(rows.find(r=>r.revision===1).snapshot),first);
+  await assert.rejects(db.exec('delete from public.cash_movements'),/permission denied/);
+  await assert.rejects(db.exec('update public.cash_register_closings set notes=\'editado\''),/permission denied/);
+  await assert.rejects(db.exec('delete from public.expenses'),/vinculada/);
+  await assert.rejects(db.query('select public.reset_operational_data()'),/histórico financeiro protegido/);
+  assert.equal((await db.query('select count(*)::int n from public.expenses')).rows[0].n,2);
+  await db.exec(`set test.user_id='00000000-0000-0000-0000-000000000002'`);
+  await assert.rejects(rpc('preview'),/Acesso negado/);
+  await db.exec('reset role;set role anon');await assert.rejects(rpc('preview'),/permission denied/);
+  console.log('OK: migração repetível, recebimento de pedido antigo/dividido, despesas automáticas, reforço, sangria, devolução, conferência Pix, pendências, recálculo, versões e permissões.');
+ } finally {await db.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -19,7 +19,8 @@
   }
 
   function localExpenses() {
-    return JSON.parse(localStorage.getItem(expenseKey) || '[]');
+    const ledger = JSON.parse(localStorage.getItem('snoop_register_v2') || '{"movements":[]}');
+    return [...JSON.parse(localStorage.getItem(expenseKey) || '[]'), ...ledger.movements.filter(m => m.kind === 'expense').map(m => ({id:m.id, description:m.description, amount:m.amount, spentBy:m.created_by, spentAt:m.created_at, cash_movement_id:m.id, payment_method:m.method}))];
   }
 
   function localCategories() {
@@ -153,7 +154,7 @@
       return data;
     },
     async getOrders() {
-      if (!hasCloud) return JSON.parse(localStorage.getItem(orderKey) || '[]');
+      if (!hasCloud) return window.CashRegisterStore ? window.CashRegisterStore.localOrders() : JSON.parse(localStorage.getItem(orderKey) || '[]');
       const { data, error } = await client.from('orders_with_items').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data.map((o) => ({
@@ -162,17 +163,20 @@
         deliveryType: o.delivery_type,
         trustedTotal: Number(o.trusted_total),
         clientTotal: Number(o.client_total),
-        createdAt: o.created_at
+        createdAt: o.created_at,
+        confirmedAt: o.confirmed_at
       }));
     },
     async updateOrderStatus(id, status) {
       if (!hasCloud) {
-        const orders = JSON.parse(localStorage.getItem(orderKey) || '[]').map((o) => o.id === id ? { ...o, status } : o);
-        localStorage.setItem(orderKey, JSON.stringify(orders));
-        return;
+        if (!window.CashRegisterStore) throw new Error('Atualize o painel para confirmar e contabilizar o pedido.');
+        return window.CashRegisterStore.rpc('order_status', {id,status});
       }
-      const { error } = await client.from('orders').update({ status }).eq('id', id);
-      if (error) throw error;
+      const { error } = await client.rpc('set_order_status', { p_id:id, p_status:status });
+      if (error) {
+        if (['PGRST202','42883'].includes(error.code)) throw new Error('Execute supabase/09-confirmacao-recebimento.sql no Supabase para ativar a confirmação com recebimento automático.');
+        throw error;
+      }
     },
     async getExpenses() {
       if (!hasCloud) return localExpenses();
@@ -190,6 +194,11 @@
       }));
     },
     async createExpense(expense) {
+      if (window.CashRegisterStore) {
+        const state = await window.CashRegisterStore.rpc('preview');
+        if (!state.session || state.session.closed_at) throw new Error('Abra o caixa antes de registrar uma saída.');
+        return window.CashRegisterStore.rpc('movement', { id: expense.id || crypto.randomUUID(), session_id: state.session.id, kind:'expense', method:expense.method, amount:expense.amount, description:expense.description });
+      }
       if (!hasCloud) return saveLocalExpense(expense);
       const { data, error } = await client.from('expenses').insert({ description: expense.description, amount: expense.amount, spent_by: expense.spentBy, spent_at: expense.spentAt }).select().single();
       if (error) {
@@ -200,7 +209,8 @@
     },
     async deleteExpense(id) {
       if (!hasCloud) {
-        localStorage.setItem(expenseKey, JSON.stringify(localExpenses().filter((expense) => expense.id !== id)));
+        if (localExpenses().some(e => e.id === id && e.cash_movement_id)) throw new Error('Despesa vinculada ao caixa: o lançamento e o histórico são preservados.');
+        localStorage.setItem(expenseKey, JSON.stringify(JSON.parse(localStorage.getItem(expenseKey) || '[]').filter((expense) => expense.id !== id)));
         return;
       }
       const { error } = await client.from('expenses').delete().eq('id', id);
@@ -225,6 +235,7 @@
     },
     async resetOperationalData() {
       if (!hasCloud) {
+        if (JSON.parse(localStorage.getItem('snoop_register_v2') || '{"sessions":[]}').sessions.length) throw new Error('O caixa possui histórico financeiro protegido. O reset operacional não está disponível após a primeira abertura.');
         const result = {
           orders: JSON.parse(localStorage.getItem(orderKey) || '[]').length,
           expenses: localExpenses().length
